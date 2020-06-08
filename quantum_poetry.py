@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------
 # PROGRAM: worldlines.py
 #------------------------------------------------------------------------------
-# Version 0.2
-# 26 May, 2020
+# Version 0.3
+# 8 June, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
