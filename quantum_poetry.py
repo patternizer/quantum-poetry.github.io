@@ -13,12 +13,12 @@
 
 #------------------------------------------------------------------------------
 # SETTINGS
-plot_branchpoint_table = True
+plot_branchpoint_table = False
 plot_networkx_connections = True
-plot_networkx_connections_anyons = True
-plot_networkx_connections_anyons_braid = True
+plot_networkx_connections_anyons = False
+plot_networkx_connections_anyons_braid = False
 plot_networkx_erdos = True
-generate_adjacency = True
+generate_adjacency = False
 generate_anyons = False
 generate_qubits = False
 qubit_logic = False
@@ -156,9 +156,10 @@ for k in range(len(knotlist)-1):
         if j == knotlist[k]:
             index.append(i)            
     branchpointarray[k,0:len(index)] = index
+ 
+df = pd.DataFrame(branchpointarray)
+df.to_csv('branchpointarray.csv', sep=',', index=False, header=False, encoding='utf-8')
     
-print(branchpointarray)
-
 #------------------------------------------------------------------------------
 # CONSTRUCT COLORMAP
 #------------------------------------------------------------------------------
@@ -214,25 +215,24 @@ if plot_networkx_connections:
     edgelist = [(i,i+1) for i in range(nwords-1)]
     labellist = [{i : wordlist[i]} for i in range(nwords)]
 
+    df = pd.DataFrame()
+    
     # Plot wordfreq colour-coded networkx graph of connectivity
     
     fig, ax = plt.subplots(figsize=(15,10))    
     G = nx.Graph()
-#    G = nx.DiGraph()
-#    G = nx.cycle_graph(nwords)
-#    pos = nx.spring_layout(G,iterations=200)
-
-#    G.add_nodes_from(wordlist)
-#   [ G.add_node(wordlist[i]) for i in range(len(wordlist)-1) ]        
-
     G.add_edges_from(edgelist)
-    for node in G.nodes():
-        G.nodes[node]['label'] = labellist[node]
-#    pos = nx.nx_pydot.pydot_layout(G, prog='dot')
-#    nx.draw_networkx(G, pos=pos, arrows= True, with_labels=True, labels=labellist)
+#    G.add_nodes_from(wordlist)
+#    G.add_nodes_from(labellist)
+#    [ G.add_node(wordlist[i]) for i in range(len(wordlist)-1) ]        
+#    for node in G.nodes():
+#        G.nodes[node]['label'] = labellist[node]
 
     edge_colormap = []
-    for j in range(np.size(branchpointarray, axis=1)): # i.e. nknots        
+    for k in range(nwords-1):
+        edge_colormap.append('lightgrey')              
+        
+    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
         knotedges = []
         for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
             knotindices = branchpointarray[j,:]
@@ -240,12 +240,15 @@ if plot_networkx_connections:
             for k in range(len(connections)):
                 if knotindices[i] > 0:
                     knotedges.append([knotindices[i], connections[k]])
-        G.add_edges_from(knotedges)
-        for l in range(len(knotedges)-1):
+        G.add_edges_from(knotedges)        
+        for l in range(int(len(knotedges)/2)): # NB 2-driectional edges
             edge_colormap.append(hexcolors[j])
-        
+#    edge_colormap = [G[u][v]['color'] for u,v in edges]        
+#    nx.draw_circular(G, node_color=knot_colormap, edge_color=edge_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
     nx.draw_circular(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
     plt.savefig('networkx.png')
+    
+    nedges = len(G.edges)
     
 if plot_networkx_connections_anyons:
     
@@ -346,11 +349,20 @@ if plot_networkx_erdos:
     # ERDOS-RENYI ESTIMATE
     #--------------------------------------------------------------------------
 
-    connectivity = 0.01
+    import random
+    for connectivity in np.linspace(0,1,1000001):
+        random.seed(42)
+        G = nx.erdos_renyi_graph(nwords, connectivity)
+        erdosedges = len(G.edges)
+        if erdosedges == (nedges-len(edgelist):            
+            print("{0:.6f}".format(connectivity))
+            print("{0:.6f}".format(erdosedges))
+            break
 
     fig, ax = plt.subplots(figsize=(15,10))
-    G = nx.erdos_renyi_graph(nwords, connectivity)
-    nx.draw_circular(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
+    nerdosedges = len(G.edges)
+    nx.draw_circular(G, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
+    plt.title('Erdős-Rényi Model: p=' + "{0:.6f}".format(connectivity) + ', N(edges)=' + "{0:.0f}".format(nerdosedges))
     plt.savefig('networkx_erdos.png')
 
 if generate_adjacency:
