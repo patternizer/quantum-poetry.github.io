@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------
 # PROGRAM: worldlines.py
 #------------------------------------------------------------------------------
-# Version 0.3
-# 8 June, 2020
+# Version 0.4
+# 10 June, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -13,17 +13,21 @@
 
 #------------------------------------------------------------------------------
 # SETTINGS
-plot_branchpoint_table = False
+write_log = True
+plot_branchpoint_table = True
 plot_networkx_connections = True
-plot_networkx_connections_anyons = False
-plot_networkx_connections_anyons_braid = False
+plot_networkx_connections_anyons = True
+plot_networkx_connections_anyons_braid = True
 plot_networkx_erdos = True
+plot_networkx_non_circular = True
+compute_erdos_parameter = True
+
+compute_erdos_equivalence = False
 generate_adjacency = False
 generate_anyons = False
 generate_qubits = False
 qubit_logic = False
 machine_learning = False
-write_log = True
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -149,8 +153,8 @@ nknots = len(knotlist)            # --> 30
 # Branchpoint index array
 
 maxbranches = wordfreq[0][1]
-branchpointarray = np.zeros((nknots-1, maxbranches), dtype='int')
-for k in range(len(knotlist)-1):  
+branchpointarray = np.zeros((nknots, maxbranches), dtype='int')
+for k in range(len(knotlist)):  
     index = []
     for i, j in enumerate(wordlist):
         if j == knotlist[k]:
@@ -188,7 +192,7 @@ if plot_branchpoint_table:
     # Reconstruction test: colour branchpoints with knot connectivity
     fig, ax = plt.subplots(figsize=(15,10))
     plt.plot(np.arange(0,len(wordlist)), np.zeros(len(wordlist)))
-    for k in range(len(knotlist)-1):  
+    for k in range(len(knotlist)):  
         plt.plot(np.arange(0,len(wordlist)), np.ones(len(wordlist))*k, color='black')
         a = branchpointarray[k,:]
         vals = a[a>0]
@@ -203,6 +207,7 @@ if plot_branchpoint_table:
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
     plt.savefig('branchplot.png')
+    plt.close(fig)
 
 if plot_networkx_connections:
     
@@ -246,8 +251,10 @@ if plot_networkx_connections:
 #    edge_colormap = [G[u][v]['color'] for u,v in edges]        
 #    nx.draw_circular(G, node_color=knot_colormap, edge_color=edge_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
     nx.draw_circular(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
+    plt.title('Networkx (circularly connected): N(edges)=' + "{0:.0f}".format(len(G.edges)))
     plt.savefig('networkx.png')
-    
+    plt.close(fig)
+
     nedges = len(G.edges)
     
 if plot_networkx_connections_anyons:
@@ -342,8 +349,32 @@ if plot_networkx_connections_anyons_braid:
         nx.draw_networkx(G, pos=pos, node_color=colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
         plt.savefig('networkx_anyon_' + j.__str__() +'_braid.png')
         plt.close(fig)
+
+if plot_networkx_non_circular:
+
+    # Generate non-circular form of the networkx graph
+
+    N = nx.Graph()
+    N.add_edges_from(edgelist)
+    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
+        knotedges = []
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knotindices = branchpointarray[j,:]
+            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
+            for k in range(len(connections)):
+                if knotindices[i] > 0:
+                    knotedges.append([knotindices[i], connections[k]])
+        N.add_edges_from(knotedges)        
+    N.remove_edges_from(edgelist)
+    N_degrees = [degree for node,degree in dict(N.degree()).items()] # degree of nodes
+    notknots = [ node for node,degree in dict(N.degree()).items() if degree == 0 ] # each node in circular graph has 2 neighbours at start
+
+    fig, ax = plt.subplots(figsize=(15,10))
+    nx.draw_circular(N, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
+    plt.title('Networkx (non-circularly connected): N(edges)=' + "{0:.0f}".format(len(N.edges)))
+    plt.savefig('networkx_non_circular.png')
         
-if plot_networkx_erdos:
+if compute_erdos_parameter:
 
     #--------------------------------------------------------------------------
     # ERDOS-RENYI ESTIMATE
@@ -352,19 +383,44 @@ if plot_networkx_erdos:
     import random
     for connectivity in np.linspace(0,1,1000001):
         random.seed(42)
-        G = nx.erdos_renyi_graph(nwords, connectivity)
-        erdosedges = len(G.edges)
-        if erdosedges == (nedges-len(edgelist):            
+        E = nx.erdos_renyi_graph(nwords, connectivity)
+        erdosedges = len(E.edges)
+        if erdosedges == (nedges-len(edgelist)):            
             print("{0:.6f}".format(connectivity))
             print("{0:.6f}".format(erdosedges))
             break
+    nerdosedges = len(E.edges)
 
     fig, ax = plt.subplots(figsize=(15,10))
-    nerdosedges = len(G.edges)
-    nx.draw_circular(G, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
+    nx.draw_circular(E, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
     plt.title('Erdős-Rényi Model: p=' + "{0:.6f}".format(connectivity) + ', N(edges)=' + "{0:.0f}".format(nerdosedges))
     plt.savefig('networkx_erdos.png')
+    plt.close(fig)
 
+if compute_erdos_equivalence:
+
+    # Compare Erdos-Renyi graph edges in reduced networks (branchpoint network)
+
+    N.remove_nodes_from(notknots)
+    mapping = { np.array(N.nodes)[i]:i for i in range(len(N.nodes)) }
+    H = nx.relabel_nodes(N,mapping)
+            
+#    Ecopy = E.copy()
+#    Ecopy.remove_edge(a,b)
+#    Ecopy.add_edge(c,d)
+    
+    maxdiff = len(H.edges)
+    for i in range(100001):
+        fig, ax = plt.subplots(figsize=(15,10))
+        E = nx.erdos_renyi_graph(len(H.nodes), connectivity)
+        diff = H.edges - E.edges        
+        if len(diff) < maxdiff:
+            maxdiff = len(diff)
+            common = H.edges - diff            
+            nx.draw_circular(E, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
+            plt.title('Erdős-Rényi Model (equivalent): N(common edges)=' + "{0:.0f}".format(len(N.edges)-len(diff)))
+            plt.savefig('networkx_erdos' + '_' + "{0:.0f}".format(i) + '.png')
+        
 if generate_adjacency:
 
     #--------------------------------------------------------------------------
