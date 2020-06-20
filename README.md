@@ -1,4 +1,4 @@
-![image](https://github.com/patternizer/quantum_poetry/blob/master/title_frame.png)
+![image](https://github.com/patternizer/quantum_poetry/blob/master/title_frame.jpg)
 
 # quantum_poetry
 
