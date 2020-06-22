@@ -14,16 +14,17 @@
 #------------------------------------------------------------------------------
 # SETTINGS
 write_log = True
-plot_branchpoint_table = True
-generate_anyons = True
-generate_qubits = True
-plot_networkx_connections = True
+plot_branchpoint_table = False
+plot_networkx_connections = False
 plot_networkx_connections_knots = False
 plot_networkx_connections_braids = False
 plot_networkx_non_circular = False
-compute_erdos_parameter = True
+compute_erdos_parameter = False
 compute_erdos_equivalence = False
 generate_adjacency = False
+
+generate_anyons = True
+generate_qubits = True
 qubit_logic = False
 machine_learning = False
 #------------------------------------------------------------------------------
@@ -551,34 +552,57 @@ if generate_qubits:
 
     # form sets of qubits one for each variation of the poem
 
-    poem = []
-    lineidx = []    
-    lines = np.arange(len(linelist))    
-    
-    a = df[df[0]==lines[0]]
-    linestart = a[0].values[0]
-    lineend = a[1].values[0]
-    lineidx.append(linestart)    
-    lineidx.append(lineend)
-    knot = a[2].values[0]
-    poem.append(df[(df[0]==linestart)&(df[1]==lineend)&(df[2]==knot)][3].values[0])
-    poem.append(df[(df[0]==lineend)&(df[1]==linestart)&(df[2]==knot)][3].values[0])
-    lines = np.setdiff1d(lines,lineidx)    
-    
-    while len(lines)>0:
+#    poem = []
+#    lineidx = []    
+#    lines = np.arange(len(linelist))    
         
-        a = df[df[0]==lines[0]]
-        linestart = a[0].values[0]
-        lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]    
-        lineidx.append(linestart)    
-        lineidx.append(lineend)
-        knot = a[2].values[lineend]
-        poem.append(df[(df[0]==linestart)&(df[1]==lineend)&(df[2]==knot)][3].values[0])
-        poem.append(df[(df[0]==lineend)&(df[1]==linestart)&(df[2]==knot)][3].values[0])
-        lines = np.setdiff1d(lines,lineidx)    
+#    while len(lines)>0:
+        
+#        a = df[df[0]==lines[0]]
+#        linestart = a[0].values[0]
+#        if linestart == 0:
+#            lineend = a[1].values[0]
+#            knot = a[2].values[0]
+#        else:      
+#            lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
+#            knot = a[2].values[lineend]
+#        lineidx.append(linestart)    
+#        lineidx.append(lineend)
+#        poem.append(df[(df[0]==linestart)&(df[1]==lineend)&(df[2]==knot)][3].values[0])
+#        poem.append(df[(df[0]==lineend)&(df[1]==linestart)&(df[2]==knot)][3].values[0])
+#        lines = np.setdiff1d(lines,lineidx)   
+        
+#    dp = pd.DataFrame(poem)
+#    dp.to_csv('poem1.csv', sep=',', index=False, header=False, encoding='utf-8')
 
-    df = pd.DataFrame(poem)
-    df.to_csv('poem1.csv', sep=',', index=False, header=False, encoding='utf-8')
+    # Pick up other permutations:
+    
+    alllines = np.arange(len(linelist))    
+    
+    for i in range(len(alllines)):
+            
+        poem = []
+        lineidx = []    
+        lines = np.arange(len(linelist))    
+        
+        while len(lines)>0:
+        
+            a = df[df[0]==lines[0]]
+            linestart = a[0].values[0]
+            if linestart == 0:
+                lineend = a[1].values[i]
+                knot = a[2].values[i]
+            else:      
+                lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
+                knot = df[(df[0]==linestart)&(df[1]==lineend)][2].values[0]
+            lineidx.append(linestart)    
+            lineidx.append(lineend)
+            poem.append(df[(df[0]==linestart)&(df[1]==lineend)&(df[2]==knot)][3].values[0])
+            poem.append(df[(df[0]==lineend)&(df[1]==linestart)&(df[2]==knot)][3].values[0])
+            lines = np.setdiff1d(lines,lineidx)   
+        
+        dp = pd.DataFrame(poem)
+        dp.to_csv('poem'+'_'+"{0:.0f}".format(i)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
 
 if qubit_logic:
 
