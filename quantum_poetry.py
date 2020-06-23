@@ -550,59 +550,56 @@ if generate_qubits:
     #--------------------------------------------------------------------------
     print('generating_qubits ...')
 
-    # form sets of qubits one for each variation of the poem
-
-#    poem = []
-#    lineidx = []    
-#    lines = np.arange(len(linelist))    
-        
-#    while len(lines)>0:
-        
-#        a = df[df[0]==lines[0]]
-#        linestart = a[0].values[0]
-#        if linestart == 0:
-#            lineend = a[1].values[0]
-#            knot = a[2].values[0]
-#        else:      
-#            lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
-#            knot = a[2].values[lineend]
-#        lineidx.append(linestart)    
-#        lineidx.append(lineend)
-#        poem.append(df[(df[0]==linestart)&(df[1]==lineend)&(df[2]==knot)][3].values[0])
-#        poem.append(df[(df[0]==lineend)&(df[1]==linestart)&(df[2]==knot)][3].values[0])
-#        lines = np.setdiff1d(lines,lineidx)   
-        
-#    dp = pd.DataFrame(poem)
-#    dp.to_csv('poem1.csv', sep=',', index=False, header=False, encoding='utf-8')
-
-    # Pick up other permutations:
+    # generate variants of the poem
     
-    alllines = np.arange(len(linelist))    
+    alllines = np.arange(len(linelist))   
+    allidx = []
+    allpoems = []
+    variant = 0
     
-    for i in range(len(alllines)):
+    for j in range(len(alllines)):
+        for i in range(len(alllines)):
             
-        poem = []
-        lineidx = []    
-        lines = np.arange(len(linelist))    
+            poem = []
+            lineidx = []    
+            lines = np.arange(len(linelist))    
         
-        while len(lines)>0:
+            while len(lines)>0:
         
-            a = df[df[0]==lines[0]]
-            linestart = a[0].values[0]
-            if linestart == 0:
-                lineend = a[1].values[i]
-                knot = a[2].values[i]
-            else:      
-                lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
-                knot = df[(df[0]==linestart)&(df[1]==lineend)][2].values[0]
-            lineidx.append(linestart)    
-            lineidx.append(lineend)
-            poem.append(df[(df[0]==linestart)&(df[1]==lineend)&(df[2]==knot)][3].values[0])
-            poem.append(df[(df[0]==lineend)&(df[1]==linestart)&(df[2]==knot)][3].values[0])
-            lines = np.setdiff1d(lines,lineidx)   
+                if len(lines) == len(linelist):
+                    a = df[df[0]==lines[j]]
+                else:
+                    a = df[df[0]==lines[0]]
+                linestart = a[0].values[0]
+                if linestart == j:
+                    if i == len(a[1]):
+                        break
+                    else:
+                        lineend = a[1].values[i]
+                        knot = a[2].values[i]
+                else:      
+                    lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
+                    knot = df[ (df[0]==linestart) & (df[1]==lineend) ][2].values[0]
+                lineidx.append(linestart)    
+                lineidx.append(lineend)
+                poem.append(df[ (df[0]==linestart) & (df[1]==lineend) & (df[2]==knot) ][3].values[0])
+                poem.append(df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][3].values[0])
+                lines = np.setdiff1d(lines,lineidx)   
         
-        dp = pd.DataFrame(poem)
-        dp.to_csv('poem'+'_'+"{0:.0f}".format(i)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+            variant += 1        
+            poemsorted = []
+            for k in range(len(lineidx)):
+                poemsorted.append(poem[lineidx.index(k)])
+#            [ poem[lineidx.index(j)] for j in lineidx ]            
+            allpoems.append(poemsorted)
+            allidx.append(lineidx)            
+            dp = pd.DataFrame(poemsorted)
+            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+
+    di = pd.DataFrame(allidx)
+    di.to_csv('poem_allidx.csv', sep=',', index=False, header=False, encoding='utf-8')
+    da = pd.DataFrame(allpoems)
+    da.to_csv('poem_all.csv', sep=',', index=False, header=False, encoding='utf-8')
 
 if qubit_logic:
 
