@@ -637,40 +637,36 @@ if plot_variants:
         fig, ax = plt.subplots(figsize=(15,10))
         for k in range(len(linelist)):  
             
+            knot = dl[(dl[0]==i)&(dl[1]==k)][3].values[0]                
             linestart = dl[(dl[0]==i)&(dl[1]==k)][1].values[0]
             lineend = dl[(dl[0]==i)&(dl[1]==k)][2].values[0]
             plt.scatter(np.arange(0,len(linelist[k].split())), np.ones(len(linelist[k].split()))*k, color='black')
             if linestart < lineend:
                 x1 = np.arange(0, dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)
                 x2 = np.arange(dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1, dl[(dl[0]==i)&(dl[1]==k)][6].values[0]-dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)                               
-#                x1 = np.arange(0, dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1)
-#                x2 = np.arange(dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1, dl[dl[0]==i][6][k]-dl[dl[0]==i][4][k]+1)                                         
                 y1 = np.ones(len(x1))*k
                 y2 = np.ones(len(x2))*k    
                 plt.plot(x1,y1,'blue')
                 plt.plot(x2,y2,'red')
-                plt.scatter(x1[-1], y1[-1], s=100, facecolors='cyan', edgecolors='black')      
+                plt.scatter(x1[-1], y1[-1], s=100, facecolors=hexcolors[knotlist.index(knot)], edgecolors='black')      
                 connectorstart.append([linestart, x1[-1], y1[-1]])                
                 connectorend.append([lineend, x2[0], y2[0]])     
             else:
-#                x3 = np.arange(dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1, dl[dl[0]==i][6][k]-dl[dl[0]==i][4][k]+1)                              
-#                x4 = np.arange(0, dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1)                
                 x3 = np.arange(dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1, dl[(dl[0]==i)&(dl[1]==k)][6].values[0]-dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)                               
                 x4 = np.arange(0, dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)               
                 y3 = np.ones(len(x3))*k
                 y4 = np.ones(len(x4))*k
                 plt.plot(x3,y3,'blue')
                 plt.plot(x4,y4,'red')       
-                plt.scatter(x4[-1], y4[-1], s=100, facecolors='cyan', edgecolors='black')
+                plt.scatter(x4[-1], y4[-1], s=100, facecolors=hexcolors[knotlist.index(knot)], edgecolors='black')
                 connectorstart.append([linestart, x3[0], y3[0]])                
                 connectorend.append([lineend, x4[-1], y4[-1]])     
 
         for k in range(len(linelist)):  
             
+            knot = dl[(dl[0]==i)&(dl[1]==k)][3].values[0]                
             linestart = dl[(dl[0]==i)&(dl[1]==k)][1].values[0]
             lineend = dl[(dl[0]==i)&(dl[1]==k)][2].values[0]
-#            linestart = dl[dl[0]==i][1][k]
-#            lineend = dl[dl[0]==i][2][k]
             print(k, linestart, lineend)
             if linestart < lineend:
                 x1 = connectorstart[linestart][1]
