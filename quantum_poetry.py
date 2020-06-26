@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------
 # PROGRAM: worldlines.py
 #------------------------------------------------------------------------------
-# Version 0.6
-# 20 June, 2020
+# Version 0.7
+# 24 June, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -24,7 +24,10 @@ compute_erdos_equivalence = False
 generate_adjacency = False
 
 generate_anyons = True
-generate_qubits = True
+generate_variants = True
+plot_variants = True
+
+generate_qubits = False
 qubit_logic = False
 machine_learning = False
 #------------------------------------------------------------------------------
@@ -504,15 +507,15 @@ if generate_anyons:
         lineindices.append([i,wordcount,wordcount+linelen-1])
         wordcount += linelen
                     
-    # For each line find word indices to and from knot
+    # For each line find word indices to and from each knot
 
     branchlinearray = []        
-    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
-        knotindices = branchpointarray[j,:][branchpointarray[j,:]>0]
-        for l in range(len(linelist)):                     
+    for i in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
+        knotindices = branchpointarray[i,:][branchpointarray[i,:]>0]
+        for j in range(len(linelist)):                     
             for k in range(len(knotindices)):
-                if knotindices[k] in np.arange(lineindices[l][1],lineindices[l][2]+1):                   
-                    branchlinearray.append([l,j,lineindices[l][1],knotindices[k],lineindices[l][2]])
+                if knotindices[k] in np.arange(lineindices[j][1],lineindices[j][2]+1):                   
+                    branchlinearray.append([j,i,lineindices[j][1],knotindices[k],lineindices[j][2]])
     
     # Filter out multiple knot in single line only occurences
 
@@ -524,41 +527,44 @@ if generate_anyons:
             mask.append(i+1)
     for i in range(len(mask)):
         a = np.delete(a,mask[i]-i,0)        
-    asorted = a[a[:,0].argsort()]
-
-    # line, knot, wordstart, wordknot, wordend 
+    branchlinearray = a[a[:,0].argsort()]
+    # branchlinearray: [line, knot, wordstart, wordknot, wordend] 
 
     # Anyons
     
     anyonarray = []
     for i in range(len(linelist)):
-        b = asorted[asorted[:,0]==i] 
-        for j in range(len(b)):    
-            anyon_pre = wordlist[b[j,2]:b[j,3]+1]
-            c = asorted[(asorted[:,1]==b[j,1]) & (asorted[:,0]!=b[j,0])]             
+        a = branchlinearray[branchlinearray[:,0]==i] 
+        if len(a) == 0:
+            break
+        for j in range(len(a)):    
+            anyon_pre = wordlist[a[j,2]:a[j,3]+1]
+            c = branchlinearray[(branchlinearray[:,1]==a[j,1]) & (branchlinearray[:,0]!=a[j,0])]             
+            if len(c) == 0:
+                break
             for k in range(len(c)):
                 anyon_post = wordlist[c[k,3]+1:c[k,4]+1]
                 anyon = anyon_pre + anyon_post
-                anyonarray.append([i,c[k,0],knotlist[b[j,1]],anyon])
+                anyonarray.append( [i ,c[k,0], knotlist[a[j,1]], anyon, a[j,2], a[j,3], a[j,4] ])
     df = pd.DataFrame(anyonarray)
     df.to_csv('anyonarray.csv', sep=',', index=False, header=False, encoding='utf-8')
                                                       
-if generate_qubits:
+if generate_variants:
 
     #--------------------------------------------------------------------------
-    # QUBIT CONSTRUCTION
+    # VARIANT CONSTRUCTION
     #--------------------------------------------------------------------------
-    print('generating_qubits ...')
+    print('generating_variants ...')
 
     # generate variants of the poem
     
-    alllines = np.arange(len(linelist))   
-    allidx = []
+    allpoemsidx = []
     allpoems = []
+    allidx = []
     variant = 0
-    
-    for j in range(len(alllines)):
-        for i in range(len(alllines)):
+
+    for j in range(len(linelist)):
+        for i in range(len(linelist)):
             
             poem = []
             lineidx = []    
@@ -571,6 +577,7 @@ if generate_qubits:
                 else:
                     a = df[df[0]==lines[0]]
                 linestart = a[0].values[0]
+                
                 if linestart == j:
                     if i == len(a[1]):
                         break
@@ -580,8 +587,17 @@ if generate_qubits:
                 else:      
                     lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
                     knot = df[ (df[0]==linestart) & (df[1]==lineend) ][2].values[0]
+                    
                 lineidx.append(linestart)    
                 lineidx.append(lineend)
+                knotstartpre = df[ (df[0]==linestart) & (df[1]==lineend) & (df[2]==knot) ][4].values[0]
+                knotstart = df[ (df[0]==linestart) & (df[1]==lineend) & (df[2]==knot) ][5].values[0]
+                knotstartpro = df[ (df[0]==linestart) & (df[1]==lineend) & (df[2]==knot) ][6].values[0]
+                knotendpre = df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][4].values[0]
+                knotend = df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][5].values[0]
+                knotendpro = df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][6].values[0]                
+                allidx.append([variant, linestart, lineend, knot, knotstartpre, knotstart, knotstartpro])
+                allidx.append([variant, lineend, linestart, knot, knotendpre, knotend, knotendpro])
                 poem.append(df[ (df[0]==linestart) & (df[1]==lineend) & (df[2]==knot) ][3].values[0])
                 poem.append(df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][3].values[0])
                 lines = np.setdiff1d(lines,lineidx)   
@@ -590,16 +606,105 @@ if generate_qubits:
             poemsorted = []
             for k in range(len(lineidx)):
                 poemsorted.append(poem[lineidx.index(k)])
-#            [ poem[lineidx.index(j)] for j in lineidx ]            
             allpoems.append(poemsorted)
-            allidx.append(lineidx)            
+            allpoemsidx.append(lineidx)            
             dp = pd.DataFrame(poemsorted)
-            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
 
-    di = pd.DataFrame(allidx)
+    nvariants = variant
+    di = pd.DataFrame(allpoemsidx)
     di.to_csv('poem_allidx.csv', sep=',', index=False, header=False, encoding='utf-8')
     da = pd.DataFrame(allpoems)
     da.to_csv('poem_all.csv', sep=',', index=False, header=False, encoding='utf-8')
+    dl = pd.DataFrame(allidx)
+    dl.to_csv('allidx.csv', sep=',', index=False, header=False, encoding='utf-8')
+
+if plot_variants:
+
+    #--------------------------------------------------------------------------
+    # PLOT POEM VARIANTS
+    #--------------------------------------------------------------------------
+    print('plotting_variants ...')
+    
+    for i in range(nvariants):
+
+        if i == 23:
+            continue
+        else:
+            connectorstart = []
+            connectorend = []
+
+        fig, ax = plt.subplots(figsize=(15,10))
+        for k in range(len(linelist)):  
+            
+            linestart = dl[(dl[0]==i)&(dl[1]==k)][1].values[0]
+            lineend = dl[(dl[0]==i)&(dl[1]==k)][2].values[0]
+            plt.scatter(np.arange(0,len(linelist[k].split())), np.ones(len(linelist[k].split()))*k, color='black')
+            if linestart < lineend:
+                x1 = np.arange(0, dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)
+                x2 = np.arange(dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1, dl[(dl[0]==i)&(dl[1]==k)][6].values[0]-dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)                               
+#                x1 = np.arange(0, dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1)
+#                x2 = np.arange(dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1, dl[dl[0]==i][6][k]-dl[dl[0]==i][4][k]+1)                                         
+                y1 = np.ones(len(x1))*k
+                y2 = np.ones(len(x2))*k    
+                plt.plot(x1,y1,'blue')
+                plt.plot(x2,y2,'red')
+                plt.scatter(x1[-1], y1[-1], s=100, facecolors='cyan', edgecolors='black')      
+                connectorstart.append([linestart, x1[-1], y1[-1]])                
+                connectorend.append([lineend, x2[0], y2[0]])     
+            else:
+#                x3 = np.arange(dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1, dl[dl[0]==i][6][k]-dl[dl[0]==i][4][k]+1)                              
+#                x4 = np.arange(0, dl[dl[0]==i][5][k]-dl[dl[0]==i][4][k]+1)                
+                x3 = np.arange(dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1, dl[(dl[0]==i)&(dl[1]==k)][6].values[0]-dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)                               
+                x4 = np.arange(0, dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)               
+                y3 = np.ones(len(x3))*k
+                y4 = np.ones(len(x4))*k
+                plt.plot(x3,y3,'blue')
+                plt.plot(x4,y4,'red')       
+                plt.scatter(x4[-1], y4[-1], s=100, facecolors='cyan', edgecolors='black')
+                connectorstart.append([linestart, x3[0], y3[0]])                
+                connectorend.append([lineend, x4[-1], y4[-1]])     
+
+        for k in range(len(linelist)):  
+            
+            linestart = dl[(dl[0]==i)&(dl[1]==k)][1].values[0]
+            lineend = dl[(dl[0]==i)&(dl[1]==k)][2].values[0]
+#            linestart = dl[dl[0]==i][1][k]
+#            lineend = dl[dl[0]==i][2][k]
+            print(k, linestart, lineend)
+            if linestart < lineend:
+                x1 = connectorstart[linestart][1]
+                y1 = connectorstart[linestart][2]
+                x2 = connectorend[lineend][1]+1
+                y2 = connectorend[lineend][2]
+                x = [x1,x2]
+                y = [y1,y2]                
+                plt.plot(x,y,'blue')
+            else:
+                x1 = connectorend[lineend][1]
+                y1 = connectorend[lineend][2]
+                x2 = connectorstart[linestart][1]-1
+                y2 = connectorstart[linestart][2]
+                x = [x1,x2]
+                y = [y1,y2]                
+                plt.plot(x,y,'red')
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        plt.xlabel('word in anyon', fontsize=20)
+        plt.ylabel('line in text', fontsize=20)
+        plt.title('Aynon Plot', fontsize=20)
+        plt.gca().invert_yaxis()    
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        plt.savefig('variant_anyons_' + i.__str__() +'.png')        
+        plt.close(fig)
+
+if generate_qubits:
+
+    #--------------------------------------------------------------------------
+    # QUBIT CONSTRUCTION
+    #--------------------------------------------------------------------------
+    print('generating_qubits ...')
 
 if qubit_logic:
 
@@ -642,6 +747,8 @@ if write_log:
     text_file.write('N(unique)=%s' % nunique)
     text_file.write('\n')
     text_file.write('N(knots)=%s' % nknots)    
+    text_file.write('\n')
+    text_file.write('N(variants)=%s' % nvariants)    
     text_file.close()
     #--------------------------------------------------------------------------
 
