@@ -40,7 +40,6 @@ crdp==0.0.2
 cryptography==2.7
 cssselect==1.1.0
 cycler==0.10.0
-Cython==0.29.13
 cytoolz==0.10.0
 dash==1.9.1
 dash-bootstrap-components==0.9.1
