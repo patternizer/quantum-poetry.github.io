@@ -4,9 +4,12 @@
 
 Python implementation of World Lines quantum poetry by Professor Amy Catanzano https://www.amycatanzano.com/world-lines
 
+An interactive app has been developed for testing here: http://quantum-poetry.herokuapp.com/
+
 ## Contents
 
 * `quantum_poetry.py` - main script to be run with Python 3.6+
+* `app.py` - Plotly Dash interactive app script to be run with Python 3.6+
 
 The first step is to clone the latest quantum_poetry code and step into the check out directory: 
 
@@ -18,13 +21,17 @@ The first step is to clone the latest quantum_poetry code and step into the chec
 The code should run with the [standard CPython](https://www.python.org/downloads/) installation and was tested 
 in a conda virtual environment running a 64-bit version of Python 3.6+.
 
-quantum_poetry can be run from sources directly, once the following module requirements are resolved:
+quantum_poetry can be run from sources directly, once the modules in requirements.txt are resolved.
 
-* `tbd`
 
 Run with:
 
     $ python quantum_poetry.py
+	
+A static version of the app can be run locally with:
+
+    $ python app.py
+	
         
 ## License
 
