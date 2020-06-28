@@ -224,7 +224,6 @@ Scrapy==2.0.1
 seaborn==0.9.0
 selenium==3.141.0
 setproctitle==1.1.10
-Shapely==1.6.4.post1
 simplegeneric==0.8.1
 SimplePool==0.1
 singledispatch==3.4.0.3
