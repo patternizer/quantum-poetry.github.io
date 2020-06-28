@@ -183,6 +183,7 @@ for k in range(nwords):
 for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots            
     for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
         knot_colormap[branchpointarray[j,i]] = hexcolors[j] 
+
 #------------------------------------------------------------------------------
                                   
 if plot_branchpoint_table:
@@ -200,7 +201,8 @@ if plot_branchpoint_table:
         plt.plot(np.arange(0,len(wordlist)), np.ones(len(wordlist))*k, color='black')
         a = branchpointarray[k,:]
         vals = a[a>0]
-        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, color=hexcolors[k])
+#        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, color=hexcolors[k])
+        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, facecolors=hexcolors[k], edgecolors='black')                
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.xlabel('word n in text', fontsize=20)
@@ -659,6 +661,7 @@ if plot_variants:
                 plt.plot(x3,y3,'blue')
                 plt.plot(x4,y4,'red')       
                 plt.scatter(x4[-1], y4[-1], s=100, facecolors=hexcolors[knotlist.index(knot)], edgecolors='black')
+                
                 connectorstart.append([linestart, x3[0], y3[0]])                
                 connectorend.append([lineend, x4[-1], y4[-1]])     
 
