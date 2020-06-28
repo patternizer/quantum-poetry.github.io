@@ -41,6 +41,7 @@ import pandas as pd
 import scipy as sp
 import random
 from random import randint
+from random import randrange
 # Text Parsing libraries:
 import re
 from collections import Counter
@@ -890,21 +891,21 @@ app.layout = html.Div(children=[
     html.Div([                                                
         html.P([html.H3(children='Entangled States'),
             html.Label('The poem uses a theoretical model of a topological quantum computer as its poetic form'),
+            html.Br(),
+            html.Label('Generate variant: '),
         ],               
         style = {'padding' : '10px', 'display': 'inline-block'}),
+
+#        dbc.Button('Randomise', id='button', color="info", className="mr-1"),
+#        html.Div(id='container-button'),
+
 
         dcc.Dropdown(
             id = 'input-variant',
             options = dropdown_variants,   
-            value = '0',
+            value = 0,
             style = {'padding' : '10px', 'width': '100px', 'fontSize' : '20px', 'display': 'inline-block'}
         ),    
-
-        html.P([html.H3(children='Poem Variants'),            
-        ],            
-        style = {'padding' : '10px', 'display': 'inline-block'}),
-
-        dcc.Graph(id='poem-variants', style = {'width': '100%'}),
         
         dcc.Graph(id='poem-variant', style = {'width': '100%'}),
     ],    
@@ -919,6 +920,28 @@ app.layout = html.Div(children=[
 # ----------------------------------------------------------------------------
 
 @app.callback(
+    Output(component_id='container-button', component_property='children'),
+    [Input(component_id='button', component_property='n_clicks')], 
+#    [Input(component_id='button', component_property='n_clicks'), 
+#     Input(component_id='input', component_property='value')],
+)
+def update_forecast_button(n_clicks, nvariants):
+
+#    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
+#    nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
+#    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
+#    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
+#    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
+#    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
+    
+    if n_clicks == 1:
+        value = randrange(nvariants)
+        return    
+    else:    
+        n_clicks = 0
+        return
+
+@app.callback(
     Output(component_id='poem-graphic', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
@@ -927,9 +950,11 @@ def update_title_image(value):
     
     fig = go.Figure()
 
-    img_width = 1000
-    img_height = 584
-    scale_factor = 0.6
+#    img_width = 1000
+#    img_height = 584
+    img_width = 1500
+    img_height = 1000
+    scale_factor = 0.4
     fig.add_trace( 
         go.Scatter(
             x=[0, img_width * scale_factor],
@@ -951,7 +976,7 @@ def update_title_image(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/title_frame.jpg"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_variants/variant_anyons_" + (value).__str__() + ".png"
         )
     )
     fig.update_layout(
@@ -1046,7 +1071,7 @@ def update_poem_networkx(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/networkx.png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/networkx_non_circular.png"
         )
     )
     fig.update_layout(
@@ -1090,7 +1115,7 @@ def update_poem_braids(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/networkx_braids.gif"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_braids/networkx_braid_7.png"
         )
     )
     fig.update_layout(
@@ -1134,7 +1159,7 @@ def update_poem_knots(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/networkx_knots.gif"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_knots/networkx_knot_7.png"
         )
     )
     fig.update_layout(
@@ -1178,7 +1203,7 @@ def update_poem_variants(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/variant_anyons.gif"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_variants/variant_anyons_7.png"
         )
     )
     fig.update_layout(
@@ -1197,12 +1222,20 @@ def update_poem_variants(value):
 def update_parameters(value):
     
     textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
-
+#    nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
+#    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
+#    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
+    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
+    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
+       
     # compute table width from maximum line length
+    
+    linelist = allpoems[value]
     
     ncol = 0
     for i in range(len(linelist)):
-        n = len(linelist[i].split())
+#        n = len(linelist[i].split())
+        n = len(linelist[i])
         if n > ncol:
             ncol = n
     
@@ -1213,10 +1246,12 @@ def update_parameters(value):
     for j in range(ncol):
         colj = []
         for i in range(len(linelist)):   
-            if j > (len(linelist[i].split())-1):
+#            if j > (len(linelist[i].split())-1):
+            if j > (len(linelist[i])-1):
                 colj.append(' ')                
             else:
-                colj.append(linelist[i].split()[j])
+#                colj.append(linelist[i].split()[j])
+                colj.append(linelist[i][j])
             if i == (len(linelist)-1):
                 print(j,i,colj)
         values.append(colj)        
