@@ -48,8 +48,6 @@ dash-renderer==1.2.4
 dash-table==3.6.0
 dash-table-experiments==0.6.0
 dask==2.5.2
-datashader==0.10.0
-datashape==0.5.4
 decorator==4.4.0
 defusedxml==0.6.0
 diff-match-patch==20181111
