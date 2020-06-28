@@ -162,7 +162,6 @@ Protego==0.1.16
 protobuf==3.11.3
 ptyprocess==0.6.0
 py==1.8.0
-py-mathjax==3.0.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycodestyle==2.5.0
@@ -180,8 +179,6 @@ Pygments==2.4.2
 PyHamcrest==2.0.2
 PyInstaller==3.6
 pylint==2.4.2
-PyNaCl==1.4.0
-pyodbc==4.0.27
 pyOpenSSL==19.0.0
 pyparsing==2.4.2
 pyproj==1.9.6
