@@ -36,7 +36,6 @@ colorama==0.4.1
 colorcet==2.0.2
 constantly==15.1.0
 contextlib2==0.6.0
-crdp==0.0.2
 cryptography==2.7
 cssselect==1.1.0
 cycler==0.10.0
