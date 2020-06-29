@@ -29,7 +29,7 @@ plot_networkx_erdos_parameter = False
 plot_networkx_erdos_equivalence = False
 plot_networkx_connections_knots = False
 plot_networkx_connections_braids = False
-plot_variants = False
+plot_variants = True
 machine_learning = False
 write_log = False
 
@@ -42,6 +42,7 @@ import scipy as sp
 import random
 from random import randint
 from random import randrange
+from mod import Mod
 # Text Parsing libraries:
 import re
 from collections import Counter
@@ -430,8 +431,8 @@ def compute_variants(linelist, anyonarray):
                 poemsorted.append(poem[lineidx.index(k)])
             allpoems.append(poemsorted)
             allpoemsidx.append(lineidx)            
-            dp = pd.DataFrame(poemsorted)
-            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+#            dp = pd.DataFrame(poemsorted)
+#            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
 
     nvariants = variant
     
@@ -637,7 +638,7 @@ if plot_variants == True:
         plt.yticks(fontsize=20)
         plt.xlabel('word in anyon', fontsize=20)
         plt.ylabel('line in text', fontsize=20)
-        plt.title('Aynon Plot for variant: ' + i.__str__(), fontsize=20)
+        plt.title('Anyon Plot for variant: ' + i.__str__(), fontsize=20)
         plt.gca().invert_yaxis()    
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -818,18 +819,23 @@ app.layout = html.Div(children=[
             html.Label("by Amy Catanzano"),
             html.Label("(one version of many possible)"),
             html.Br(),            
-            html.Br(),            
+            html.Br(),           
+#            for i in range(len(linelist)):                
+#                html.Label(linelist[i]),
+#                if Mod(i,2) == 2:
+#                    html.Br(),                                        
             html.Label("When we think as far as our world lines, our thoughts become movements,"),
-            html.Label("in space, motions, time, threads curved as thoughts recording the mind writing relative,"),
+            html.Label("in space, motions, time, threads curved as thoughts recording the mind's writing relative,"),
             html.Br(),            
             html.Label("tangled motions, knotting intricate paths like strands of DNA intertwined."),
             html.Label("The mind of a knot is a continuous curve through space, writing woven,"),
             html.Br(),            
-            html.Label("locations of particles traveling as their orbits in spacetime knot particles,"),
+            html.Label("locations of particles traveling as their orbits in spacetime knot particles"),
             html.Label("of indefinite location. The world mind is a record that orbits its knotted history."),
             html.Br(),            
             html.Label("The poem, an indefinite knot threaded in a continuous curve of mind's space,"),
             html.Label("computes qubits, its world lines the braided motions of mind's memory."),
+
         ],
         style = {'padding' : '10px', 'display': 'inline-block'}),
        
@@ -911,25 +917,16 @@ app.layout = html.Div(children=[
     Output('cache-poem', 'children'), 
     [Input(component_id='input-variant', component_property='value')],
 )
-
-def compute_poem(value):
-
-#    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
-#    knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
-#    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
-#    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)    
+def update_poem(value):
     poem = allpoems[value]
-    
     return json.dumps(poem)
+              
               
 @app.callback(
     Output(component_id='container-button', component_property='children'),
     [Input(component_id='button', component_property='n_clicks')], 
 )
-def update_forecast_button(n_clicks, nvariants):
-
-#    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
-    
+def update_forecast_button(n_clicks, nvariants):    
     if n_clicks == 1:
         value = randrange(nvariants)
         return    
@@ -937,15 +934,13 @@ def update_forecast_button(n_clicks, nvariants):
         n_clicks = 0
         return
 
+
 @app.callback(
     Output(component_id='poem-graphic', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
-
 def update_title_image(value):
-    
     fig = go.Figure()
-
 #    img_width = 1000
 #    img_height = 584
     img_width = 1500
@@ -980,25 +975,21 @@ def update_title_image(value):
         height=img_height * scale_factor,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
-
     return fig
+
 
 @app.callback(
     Output(component_id='poem-branchpoints', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
-
 def update_poem_branchpoints(value):
-    
 #    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
+#    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
 #    knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
-
     data = []
     for k in range(len(knotlist)):  
-
         a = branchpointarray[k,:]
         vals = a[a>0]
-        
         trace = [
             go.Scatter(
                 x = np.arange(0,len(wordlist)), 
@@ -1019,26 +1010,21 @@ def update_poem_branchpoints(value):
             ),                
         ]
         data = data + trace
-    
     layout = go.Layout( 
         xaxis=dict(title='word n in text'),
         yaxis=dict(title='knot k in text (>1 connection)'),
         margin=dict(r=60, l=60, b=60, t=60),                  
     ) 
-
     return {'data': data, 'layout':layout} 
+
 
 @app.callback(
     Output(component_id='poem-networkx', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
-
 def update_poem_networkx(value):
-    
-    # nx.draw_circular(G, node_color=knot_colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
-    
+    # nx.draw_circular(G, node_color=knot_colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)    
     fig = go.Figure()
-
     img_width = 1500
     img_height = 1000
     scale_factor = 0.45
@@ -1071,18 +1057,15 @@ def update_poem_networkx(value):
         height=img_height * scale_factor,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
-
     return fig
+
 
 @app.callback(
     Output(component_id='poem-braids', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
-
 def update_poem_braids(value):
-        
     fig = go.Figure()
-
     img_width = 1500
     img_height = 1000
     scale_factor = 0.45
@@ -1115,18 +1098,15 @@ def update_poem_braids(value):
         height=img_height * scale_factor,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
-
     return fig
+
 
 @app.callback(
     Output(component_id='poem-knots', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
-
 def update_poem_knots(value):
-        
     fig = go.Figure()
-
     img_width = 1500
     img_height = 1000
     scale_factor = 0.45
@@ -1159,18 +1139,15 @@ def update_poem_knots(value):
         height=img_height * scale_factor,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
-
     return fig
+
 
 @app.callback(
     Output(component_id='poem-variants', component_property='figure'),
     [Input(component_id='input-variant', component_property='value')]
     )
-
 def update_poem_variants(value):
-        
     fig = go.Figure()
-
     img_width = 1500
     img_height = 1000
     scale_factor = 0.45
@@ -1203,27 +1180,22 @@ def update_poem_variants(value):
         height=img_height * scale_factor,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
     )
-
     return fig
+
 
 @app.callback(
     Output(component_id='poem-variant', component_property='figure'),
     [Input(component_id='cache-poem', component_property='children')],
     )
-
 def update_parameters(poem):
-           
-    linelist = json.loads(poem)
-    
+    linelist = json.loads(poem)    
     ncol = 0
     for i in range(len(linelist)):
         n = len(linelist[i])
         if n > ncol:
             ncol = n
-    
     columnheaders = ['Word ' + (i+1).__str__() for i in range(ncol)]    
     rowheaders = ['Line ' + (i+1).__str__() for i in range(len(linelist))]
-    
     values = []
     for j in range(ncol):
         colj = []
@@ -1232,10 +1204,9 @@ def update_parameters(poem):
                 colj.append(' ')                
             else:
                 colj.append(linelist[i][j])
-            if i == (len(linelist)-1):
-                print(j,i,colj)
+#            if i == (len(linelist)-1):
+#                print(j,i,colj)
         values.append(colj)        
-              
     data = [
         go.Table(
             header=dict(values=columnheaders,                        
