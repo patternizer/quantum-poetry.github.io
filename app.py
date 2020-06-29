@@ -1189,7 +1189,7 @@ def update_parameters(poem):
         n = len(linelist[i])
         if n > ncol:
             ncol = n
-    columnheaders = ['Word ' + (i+1).__str__() for i in range(ncol)]    
+    columnheaders = ['Word<Br>' + (i+1).__str__() for i in range(ncol)]    
     rowheaders = ['Line ' + (i+1).__str__() for i in range(len(linelist))]
     values = []
     for j in range(ncol):
@@ -1199,24 +1199,22 @@ def update_parameters(poem):
                 colj.append(' ')                
             else:
                 colj.append(linelist[i][j])
-#            if i == (len(linelist)-1):
-#                print(j,i,colj)
         values.append(colj)        
     data = [
         go.Table(
             header=dict(values=columnheaders,                        
                 line_color='darkslategray',
                 fill_color='lightgrey',
-                font_size=11,
+                font_size=9,
                 align='left'),
             cells=dict(values=values, 
                 line_color='white',
                 fill_color='white',
-                font_size=11,
+                font_size=9,
                 align='left')
         ),
     ]
-    layout = go.Layout(  height=300, width=1200, margin=dict(r=10, l=10, b=0, t=0))
+    layout = go.Layout(  height=300, width=1300, margin=dict(r=10, l=10, b=0, t=60))
     return {'data': data, 'layout':layout} 
 
 
