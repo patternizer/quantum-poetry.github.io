@@ -42,7 +42,6 @@ import scipy as sp
 import random
 from random import randint
 from random import randrange
-# from mod import Mod
 # Text Parsing libraries:
 import re
 from collections import Counter
@@ -820,10 +819,6 @@ app.layout = html.Div(children=[
             html.Label("(one version of many possible)"),
             html.Br(),            
             html.Br(),           
-#            for i in range(len(linelist)):                
-#                html.Label(linelist[i]),
-#                if Mod(i,2) == 2:
-#                    html.Br(),                                        
             html.Label("When we think as far as our world lines, our thoughts become movements"),
             html.Label("in space, motions, time, threads curved as thoughts recording the mind writing relative,"),
             html.Br(),            
@@ -922,17 +917,17 @@ def update_poem(value):
     return json.dumps(poem)
               
               
-@app.callback(
-    Output(component_id='container-button', component_property='children'),
-    [Input(component_id='button', component_property='n_clicks')], 
-)
-def update_forecast_button(n_clicks, nvariants):    
-    if n_clicks == 1:
-        value = randrange(nvariants)
-        return    
-    else:    
-        n_clicks = 0
-        return
+#@app.callback(
+#    Output(component_id='container-button', component_property='children'),
+#    [Input(component_id='button', component_property='n_clicks')], 
+#)
+#def update_forecast_button(n_clicks, nvariants):    
+#    if n_clicks == 1:
+#        value = randrange(nvariants)
+#        return    
+#    else:    
+#        n_clicks = 0
+#        return
 
 
 @app.callback(
@@ -1232,8 +1227,7 @@ def update_parameters(poem):
 # html.Ul([html.Li(x) for x in my_list])
 
 if __name__ == "__main__":
-#    app.run_server(debug=True)
-    app.run_server()
+    app.run_server(debug=True)
 
 print('Python code end')
 
