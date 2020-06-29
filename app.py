@@ -15,9 +15,9 @@
 # SETTINGS
 # ========================================================================
 
-generate_networkx_edges = True
 generate_anyons = True
 generate_variants = True
+generate_networkx_edges = False
 erdos_parameter = False
 erdos_equivalence = False
 generate_qubits = False
@@ -72,6 +72,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from flask import Flask
+import json
 import os
 
 #------------------------------------------------------------------------------
@@ -464,10 +465,6 @@ def machine_learning():
 
     print('extracting features ...')
 
-
-
-
-
 #----------------------------
 # LOAD POEM
 #----------------------------
@@ -840,8 +837,11 @@ app.layout = html.Div(children=[
             html.Label(["Quantum entanglement app created by ", html.A("Michael Taylor", href="https://patternizer.github.io")]),                                                
         ],
         style = {'padding' : '10px', 'display': 'inline-block'}),
-        
+                
         dcc.Graph(id='poem-graphic', style = {'width': '100%'}),
+
+        # Hidden variable to cache poem
+        html.Div(id='cache-poem', style={'display': 'none'}),
 
     ],
     style={'columnCount': 2}),
@@ -851,16 +851,10 @@ app.layout = html.Div(children=[
 # ------------
     html.Div([            
 
-        html.P([html.H3(children='Branchpoint Analysis'),            
-        ],            
-        style = {'padding' : '10px', 'display': 'inline-block'}),
-
+        html.P([html.H3(children='Branchpoint Analysis')], style = {'padding' : '10px', 'display': 'inline-block'}),
         dcc.Graph(id='poem-branchpoints', style = {'width': '100%'}),
 
-        html.P([html.H3(children='Network Analysis'),            
-        ],            
-        style = {'padding' : '10px', 'display': 'inline-block'}),
-
+        html.P([html.H3(children='Network Analysis')], style = {'padding' : '10px', 'display': 'inline-block'}),
         dcc.Graph(id='poem-networkx', style = {'width': '100%'}),
 
     ],
@@ -870,16 +864,10 @@ app.layout = html.Div(children=[
 # ------------
     html.Div([            
 
-        html.P([html.H3(children='Anyon Braiding'),            
-        ],            
-        style = {'padding' : '10px', 'display': 'inline-block'}),
-
+        html.P([html.H3(children='Anyon Braiding')], style = {'padding' : '10px', 'display': 'inline-block'}),
         dcc.Graph(id='poem-braids', style = {'width': '100%'}),
 
-        html.P([html.H3(children='Anyon Knotting'),            
-        ],            
-        style = {'padding' : '10px', 'display': 'inline-block'}),
-
+        html.P([html.H3(children='Anyon Knotting')], style = {'padding' : '10px', 'display': 'inline-block'}),
         dcc.Graph(id='poem-knots', style = {'width': '100%'}),
 
     ],
@@ -920,18 +908,26 @@ app.layout = html.Div(children=[
 # ----------------------------------------------------------------------------
 
 @app.callback(
+    Output('cache-poem', 'children'), 
+    [Input(component_id='input-variant', component_property='value')],
+)
+
+def compute_poem(value):
+
+#    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
+#    knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
+#    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
+#    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)    
+    poem = allpoems[value]
+    
+    return json.dumps(poem)
+              
+@app.callback(
     Output(component_id='container-button', component_property='children'),
     [Input(component_id='button', component_property='n_clicks')], 
-#    [Input(component_id='button', component_property='n_clicks'), 
-#     Input(component_id='input', component_property='value')],
 )
 def update_forecast_button(n_clicks, nvariants):
 
-#    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
-#    nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
-#    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
-#    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
-#    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
 #    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
     
     if n_clicks == 1:
@@ -994,8 +990,8 @@ def update_title_image(value):
 
 def update_poem_branchpoints(value):
     
-    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
-    knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
+#    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
+#    knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
 
     data = []
     for k in range(len(knotlist)):  
@@ -1039,10 +1035,6 @@ def update_poem_branchpoints(value):
 
 def update_poem_networkx(value):
     
-    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
-    knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
-    nedges, notknots, G, N = compute_networkx_edges(len(wordlist), wordlist, branchpointarray)
-
     # nx.draw_circular(G, node_color=knot_colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
     
     fig = go.Figure()
@@ -1216,25 +1208,15 @@ def update_poem_variants(value):
 
 @app.callback(
     Output(component_id='poem-variant', component_property='figure'),
-    [Input(component_id='input-variant', component_property='value')]
+    [Input(component_id='cache-poem', component_property='children')],
     )
 
-def update_parameters(value):
-    
-    textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
-#    nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
-#    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
-#    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
-    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
-    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
-       
-    # compute table width from maximum line length
-    
-    linelist = allpoems[value]
+def update_parameters(poem):
+           
+    linelist = json.loads(poem)
     
     ncol = 0
     for i in range(len(linelist)):
-#        n = len(linelist[i].split())
         n = len(linelist[i])
         if n > ncol:
             ncol = n
@@ -1246,11 +1228,9 @@ def update_parameters(value):
     for j in range(ncol):
         colj = []
         for i in range(len(linelist)):   
-#            if j > (len(linelist[i].split())-1):
             if j > (len(linelist[i])-1):
                 colj.append(' ')                
             else:
-#                colj.append(linelist[i].split()[j])
                 colj.append(linelist[i][j])
             if i == (len(linelist)-1):
                 print(j,i,colj)
