@@ -29,7 +29,7 @@ plot_networkx_erdos_parameter = False
 plot_networkx_erdos_equivalence = False
 plot_networkx_connections_knots = False
 plot_networkx_connections_braids = False
-plot_variants = True
+plot_variants = False
 machine_learning = False
 write_log = False
 
@@ -824,11 +824,11 @@ app.layout = html.Div(children=[
 #                html.Label(linelist[i]),
 #                if Mod(i,2) == 2:
 #                    html.Br(),                                        
-            html.Label("When we think as far as our world lines, our thoughts become movements,"),
-            html.Label("in space, motions, time, threads curved as thoughts recording the mind's writing relative,"),
+            html.Label("When we think as far as our world lines, our thoughts become movements"),
+            html.Label("in space, motions, time, threads curved as thoughts recording the mind writing relative,"),
             html.Br(),            
             html.Label("tangled motions, knotting intricate paths like strands of DNA intertwined."),
-            html.Label("The mind of a knot is a continuous curve through space, writing woven,"),
+            html.Label("The mind of a knot is a continuous curve through space, writing woven"),
             html.Br(),            
             html.Label("locations of particles traveling as their orbits in spacetime knot particles"),
             html.Label("of indefinite location. The world mind is a record that orbits its knotted history."),
@@ -1232,7 +1232,8 @@ def update_parameters(poem):
 # html.Ul([html.Li(x) for x in my_list])
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+#    app.run_server(debug=True)
+    app.run_server()
 
 print('Python code end')
 
