@@ -18,9 +18,10 @@
 generate_anyons = True
 generate_variants = True
 generate_networkx_edges = False
-erdos_parameter = False
-erdos_equivalence = False
 generate_qubits = False
+compute_erdos_parameter = False
+compute_erdos_equivalence = False
+compute_adjacency = False
 qubit_logic = False
 plot_branchpoint_table = False
 plot_networkx_connections = False
@@ -62,7 +63,6 @@ from plotly.subplots import make_subplots
 from skimage import io
 import glob
 from PIL import Image
-
 # NLP Libraries
 # ML Libraries
 # App Deployment Libraries
@@ -485,16 +485,16 @@ nknots = len(knotlist)            # --> 30
 
 if generate_networkx_edges == True:
     nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
-if erdos_parameter == True:
-    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
-if erdos_equivalence == True:
-    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
 if generate_anyons == True:
     anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
 if generate_variants == True:
     nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
 if generate_qubits == True:
     print('generating_qubits ...')
+if compute_erdos_parameter == True:
+    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
+if compute_erdos_equivalence == True:
+    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
 if qubit_logic == True:
     print('applying logic gates ...')
 if machine_learning == True:
@@ -565,7 +565,6 @@ if plot_networkx_erdos_equivalence == True:
     plt.title('Erdős-Rényi Model (equivalent): N(common edges)=' + "{0:.0f}".format(len(N.edges)-len(diff)), fontsize=20)
     plt.savefig('networkx_erdos_equivalence.png')
         
-
 if plot_variants == True:
 
     print('plotting_variants ...')
@@ -813,20 +812,19 @@ app.layout = html.Div(children=[
 
         html.Label( html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem")) ),         
         html.Br(),    
-        html.Label("A poem based on a theoretical model of a topological quantum computer (individual project supported with funding from the Simons Center for Geometry and Physics at Stony Brook University)"),
+        html.Label("A poem by Amy Catanzano based on a theoretical model of a topological quantum computer"),         
         html.Br(),
         html.Label([html.U("Formats"), ": print publication (complete), computational poetry and interactive digital poetry (underway), 3D art installation (anticipated)"]),
         html.Br(),
-        html.Label([html.U("Collaborator for Phase 3"), ": Dr. Michael Taylor, applied mathematician and senior research associate in climate science at University of East Anglia (Norwich, United Kingdom)"]),
+        html.Label([html.U("Collaborator for Phase 3"), ": Dr. Michael Taylor, applied mathematician and senior research associate in climate science at the University of East Anglia (Norwich, United Kingdom)"]),
         html.Br(),       
-        html.Label([html.U("Description"), ": ", html.Em("World Lines: A Quantum Supercomputer Poem"), " is a poem and poetic form invented by the author that is based on a theoretical model of a topological quantum computer. Phase 1 of the project is complete and was published by the Simons Center for Geometry and Physics at Stony Brook University. Other poems by the author using this poetic form are underway in Phase 2."]),
+        html.Label([html.U("Description"), ": ", html.Em("World Lines: A Quantum Supercomputer Poem"), " is a poem and poetic form invented by Amy Catanzano that is based on a theoretical model of a topological quantum computer. Phase 1 of the project is complete and was published by the Simons Center for Geometry and Physics at Stony Brook University. Additional poems by Amy Catanzano using this poetic form are underway in Phase 2."]),
         html.Br(),                   
-        html.Label("In Phase 3 of the project that is underway, Michael Taylor is using the Python computer programming language and machine learning (artificial intelligence) to develop an algorithm and quantum script that computationally expressesall possible versions of World Lines.After parsing each sentence in the poem and identifying branch points, words that are in common, Dr. Taylor is training a linguistic processor to choose world lines that are semantically logical to track how different topological paths move through a text map into different versions of the poem. A web interface will be generated where, after a text is loaded, a World Lines algorithm could find the branch points and do one of two things: 1) allow the reader to manually navigate along a world line, creating a new poem as a re-structured sample of the text that could be stored and studied, and 2) run a simulation and generate world lines that the reader could choose between in order to render new poems. Visual poetry and artwork are being generated from the data."),
+        html.Label(["In Phase 3 of the project, underway, Michael Taylor is using the Python computer programming language and machine learning (artificial intelligence) to develop an algorithm and quantum script that computationally expresses all possible versions of ", html.Em("World Lines"), ". After parsing each sentence in the poem and identifying branch points, words that are in common, Dr. Taylor is training a linguistic processor to choose world lines that are semantically logical to track how different topological paths move through a text map into different versions of the poem. A web interface will be generated where, after a text is loaded, a ", html.Em("World Lines"), " algorithm could find the branch points and do one of two things: 1) allow the reader to manually navigate along a world line, creating a new poem as a re-structured sample of the text that could be stored and studied, and 2) run a simulation and generate world lines that the reader could choose between in order to render new poems. Visual poetry and artwork are being generated from the data."]),
         html.Br(),                   
-        html.Label("Phase 4 of the poem will involve creating a 3D, interactive art installation based on the poem."),
-        html.Br(),                           
-        html.Label([html.U("Anticipated outcomes"), ": computational poetry, visual poetry and artwork, evolution of quantum script writing, interactive web interface, investigation of quantum linguistics and information theory, educational tool in poetry and physics, 3D art installation."]),
-
+        html.Label("Phase 4 of the poem will involve creating a 3D art installation based on the poem."),
+        html.Br(),                         
+        html.Label([html.U("Anticipated outcomes for Phases 3-4"), ": computational poetry, visual poetry and artwork, evolution of quantum script writing, interactive web interface, investigation of quantum linguistics and information theory, educational tool in poetry and physics, 3D art installation."]),
     ],
     style={'padding' : '10px', 'width': '100%', 'display': 'inline-block'},
     ),
