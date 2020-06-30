@@ -805,20 +805,43 @@ app.config.suppress_callback_exceptions = True
 
 app.layout = html.Div(children=[
 
-    html.H1(children='World Lines: A Quantum Supercomputer Poem',
+    html.H1(children='Transdisciplinary Quantum Poetry',
         style={'padding' : '10px', 'width': '100%', 'display': 'inline-block'},
+    ),
+
+    html.P([
+
+        html.Label( html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem")) ),         
+        html.Br(),    
+        html.Label("A poem based on a theoretical model of a topological quantum computer (individual project supported with funding from the Simons Center for Geometry and Physics at Stony Brook University)"),
+        html.Br(),
+        html.Label([html.U("Formats"), ": print publication (complete), computational poetry and interactive digital poetry (underway), 3D art installation (anticipated)"]),
+        html.Br(),
+        html.Label([html.U("Collaborator for Phase 3"), ": Dr. Michael Taylor, applied mathematician and senior research associate in climate science at University of East Anglia (Norwich, United Kingdom)"]),
+        html.Br(),       
+        html.Label([html.U("Description"), ": ", html.Em("World Lines: A Quantum Supercomputer Poem"), " is a poem and poetic form invented by the author that is based on a theoretical model of a topological quantum computer. Phase 1 of the project is complete and was published by the Simons Center for Geometry and Physics at Stony Brook University. Other poems by the author using this poetic form are underway in Phase 2."]),
+        html.Br(),                   
+        html.Label("In Phase 3 of the project that is underway, Michael Taylor is using the Python computer programming language and machine learning (artificial intelligence) to develop an algorithm and quantum script that computationally expressesall possible versions of World Lines.After parsing each sentence in the poem and identifying branch points, words that are in common, Dr. Taylor is training a linguistic processor to choose world lines that are semantically logical to track how different topological paths move through a text map into different versions of the poem. A web interface will be generated where, after a text is loaded, a World Lines algorithm could find the branch points and do one of two things: 1) allow the reader to manually navigate along a world line, creating a new poem as a re-structured sample of the text that could be stored and studied, and 2) run a simulation and generate world lines that the reader could choose between in order to render new poems. Visual poetry and artwork are being generated from the data."),
+        html.Br(),                   
+        html.Label("Phase 4 of the poem will involve creating a 3D, interactive art installation based on the poem."),
+        html.Br(),                           
+        html.Label([html.U("Anticipated outcomes"), ": computational poetry, visual poetry and artwork, evolution of quantum script writing, interactive web interface, investigation of quantum linguistics and information theory, educational tool in poetry and physics, 3D art installation."]),
+
+    ],
+    style={'padding' : '10px', 'width': '100%', 'display': 'inline-block'},
     ),
 
 # ------------
     html.Div([            
 
-        html.P([
-
+        html.P([html.H3(children='World Lines'),
+#        html.P([
+        
             html.Label([ html.A('World Lines: A Quantum Supercomputer Poem (2018)', href='https://www.amycatanzano.com/world-lines')]),
             html.Label("by Amy Catanzano"),
             html.Label("(one version of many possible)"),
-            html.Br(),            
-            html.Br(),           
+            html.Br(),                  
+            html.Blockquote([
             html.Label("When we think as far as our world lines, our thoughts become movements"),
             html.Label("in space, motions, time, threads curved as thoughts recording the mind writing relative,"),
             html.Br(),            
@@ -830,12 +853,14 @@ app.layout = html.Div(children=[
             html.Br(),            
             html.Label("The poem, an indefinite knot threaded in a continuous curve of mind's space,"),
             html.Label("computes qubits, its world lines the braided motions of mind's memory."),
-
+            ]),
         ],
         style = {'padding' : '10px', 'display': 'inline-block'}),
+
+        html.P([html.H3(children='Topological Quantum Variant'),
+#        html.P([
        
-        html.P([
-            html.Label(["Quantum entanglement app created by ", html.A("Michael Taylor", href="https://patternizer.github.io")]),                                                
+            html.Label(["Reactive app coded in ", html.A("Plotly Dash Python", href="https://plotly.com/dash/"), " by ", html.A("Michael Taylor", href="https://patternizer.github.io")]),                                                
         ],
         style = {'padding' : '10px', 'display': 'inline-block'}),
                 
@@ -878,10 +903,8 @@ app.layout = html.Div(children=[
    
 # ------------
     html.Div([                                                
-        html.P([html.H3(children='Entangled States'),
-            html.Label('The poem uses a theoretical model of a topological quantum computer as its poetic form'),
-            html.Br(),
-            html.Label('Generate variant: '),
+        html.P([html.H3(children='Quantum Poetry Machine'),
+            html.Label(["Select a topological quantum variant of ", html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem"))]),
         ],               
         style = {'padding' : '10px', 'display': 'inline-block'}),
 
