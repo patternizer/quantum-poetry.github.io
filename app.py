@@ -4,8 +4,8 @@
 #-----------------------------------------------------------------------
 # PROGRAM: app.py
 #-----------------------------------------------------------------------
-# Version 0.1
-# 26 June, 2020
+# Version 0.2
+# 3 July, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -19,9 +19,9 @@ generate_anyons = True
 generate_variants = True
 generate_networkx_edges = False
 generate_qubits = False
-compute_erdos_parameter = False
-compute_erdos_equivalence = False
-compute_adjacency = False
+generate_erdos_parameter = False
+generate_erdos_equivalence = False
+generate_adjacency = False
 qubit_logic = False
 plot_branchpoint_table = False
 plot_networkx_connections = False
@@ -40,6 +40,8 @@ write_log = False
 import numpy as np
 import pandas as pd
 import scipy as sp
+# import math
+# math.log(N,2) for entropy calculations
 import random
 from random import randint
 from random import randrange
@@ -56,13 +58,16 @@ import matplotlib.cm as cm
 from matplotlib import colors as mcol
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
+import plotly.express as px
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
-import plotly.express as px
 from plotly.subplots import make_subplots
 from skimage import io
 import glob
 from PIL import Image
+# Silence library version notifications
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 # NLP Libraries
 # ML Libraries
 # App Deployment Libraries
@@ -122,22 +127,29 @@ def parse_poem(input_file):
 
     print('parsing poem ...')
 
-    # Store text as a single string and lines in a list
+    # Store lines in a list
 
-    textstr = ''
     linelist = []
     with open (input_file, 'rt') as f:      
         for line in f:   
-            if len(line)>1: # ignore empty lines                 
-                linelist.append(line.rstrip('\n'))
-                textstr = textstr + line.rstrip('\n')
+            if len(line)>1: # ignore empty lines                  
+                linelist.append(line.strip())   
             else:
                 continue
 
-    # extract sentences into list
+    # Store text as a single string
+
+    textstr = ''
+    for i in range(len(linelist)):
+        if i < len(linelist) - 1:
+            textstr = textstr + linelist[i] + ' '
+        else:
+            textstr = textstr + linelist[i]
+        
+    # extract sentences into list 
+    # (ignore last entry which is '' due to final full stop)
             
-    sentencelist = textstr.split('.')
-    sentencelist = sentencelist[0:-1] # ignore last entry which is '' due to final full stop
+    sentencelist = textstr.split('.')[0:-1] 
 
     # Clean text and lower case all words
 
@@ -170,14 +182,39 @@ def parse_poem(input_file):
 
     # Branchpoint index array
 
-    maxbranches = wordfreq[0][1]
-    branchpointarray = np.zeros((len(knotlist), maxbranches), dtype='int')
-    for k in range(len(knotlist)):  
-        index = []
-        for i, j in enumerate(wordlist):
-            if j == knotlist[k]:
-                index.append(i)            
-        branchpointarray[k,0:len(index)] = index
+    # Filter out multiple knot in single line only occurences
+    # using word indices of knots and line start and end indices
+
+    lineindices = []    
+    wordcount = 0
+    for i in range(len(linelist)):
+        linelen = len(linelist[i].split())
+        lineindices.append([i, wordcount, wordcount+linelen-1])
+        wordcount += linelen
+                    
+    mask = []
+    branchlinearray = []        
+    for i in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
+        knotindices = branchpointarray[i,:][branchpointarray[i,:]>0]
+        linecounter = 0 
+        for j in range(len(linelist)):                     
+            knotcounter = 0
+            for k in range(len(knotindices)):
+                if knotindices[k] in np.arange(lineindices[j][1],lineindices[j][2]+1):
+                    knotcounter += 1
+                    branchlinearray.append([j,i,lineindices[j][1],knotindices[k],lineindices[j][2]])            
+            if knotcounter > 0:
+                linecounter += 1                    
+        if linecounter < 2:
+            mask.append(i)            
+
+    a = np.array(branchpointarray)
+    b = knotlist
+    for i in range(len(mask)):
+        a = np.delete(a,mask[i]-i,0)        
+        b = np.delete(b,mask[i]-i,0)        
+    branchpointarray = a
+    knotlist = list(b)
  
     db = pd.DataFrame(branchpointarray)
     db.to_csv('branchpointarray.csv', sep=',', index=False, header=False, encoding='utf-8')
@@ -274,12 +311,13 @@ def compute_erdos_parameter(nwords, nedges):
         E = nx.erdos_renyi_graph(nwords, connectivity)
         erdosedges = len(E.edges)
         if erdosedges == (nedges-len(edgelist)):            
-            print("{0:.6f}".format(connectivity))
-            print("{0:.6f}".format(erdosedges))
-            break
-    nerdosedges = len(E.edges)
-        
-    return nerdosedges, connectivity, E
+#            print("{0:.6f}".format(connectivity))
+#            print("{0:.6f}".format(erdosedges))
+            nerdosedges = len(E.edges)
+            return nerdosedges, connectivity, E
+#            break
+#    nerdosedges = len(E.edges)       
+#    return nerdosedges, connectivity, E
 
 def compute_erdos_equivalence(nwords, nedges, N, notknots):
     """
@@ -430,8 +468,8 @@ def compute_variants(linelist, anyonarray):
                 poemsorted.append(poem[lineidx.index(k)])
             allpoems.append(poemsorted)
             allpoemsidx.append(lineidx)            
-#            dp = pd.DataFrame(poemsorted)
-#            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+            dp = pd.DataFrame(poemsorted)
+            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1).zfill(3)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
 
     nvariants = variant
     
@@ -471,17 +509,18 @@ def machine_learning():
 """
 Poem to generate quantum variants from
 """
-input_file = 'poem.txt'
+#input_file = 'poem.txt'
+input_file = 'poem-v1.txt'
 
 textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
 
 # Counts
         
-nsentences = len(sentencelist)    # --> 10    
-nlines = len(linelist)            # --> 26
-nwords = len(wordlist)            # --> 222
-nunique = len(uniquewordlist)     # --> 134
-nknots = len(knotlist)            # --> 30
+nsentences = len(sentencelist)    # --> 4    
+nlines = len(linelist)            # --> 8
+nwords = len(wordlist)            # --> 98
+nunique = len(uniquewordlist)     # --> 59
+nknots = len(knotlist)            # --> 20
 
 if generate_networkx_edges == True:
     nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
@@ -514,7 +553,14 @@ if plot_branchpoint_table == True:
         plt.plot(np.arange(0,len(wordlist)), np.ones(len(wordlist))*k, color='black')
         a = branchpointarray[k,:]
         vals = a[a>0]
-        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, facecolors=hexcolors[k], edgecolors='black')                
+        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, facecolors=hexcolors[k], edgecolors='black') 
+        
+    xticks = np.arange(0, len(wordlist)+0, step=10)
+    xlabels = np.array(np.arange(0, len(wordlist), step=10).astype('str'))
+    yticks = np.arange(0, len(knotlist), step=1)
+    ylabels = np.array(np.arange(0, len(knotlist), step=1).astype('str'))
+    plt.xticks(ticks=xticks, labels=xlabels)  # Set label locations
+    plt.yticks(ticks=yticks, labels=ylabels)  # Set label locations
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.xlabel('word n in text', fontsize=20)
@@ -640,7 +686,7 @@ if plot_variants == True:
         plt.gca().invert_yaxis()    
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        plt.savefig('variant_anyons_' + i.__str__() +'.png')        
+        plt.savefig('variant_anyons_' + i.__str__().zfill(3) +'.png')        
         plt.close(fig)
     
     # Generate animated GIF
@@ -649,6 +695,7 @@ if plot_variants == True:
     fp_out = "variant_anyons.gif"
 
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
+#    img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in), key=os.path.getmtime)]        
     img.save(fp=fp_out, format='GIF', append_images=imgs,
          save_all=True, duration=1000, loop=0)
     
@@ -693,13 +740,13 @@ if plot_networkx_connections_knots == True:
         
         plt.title('Anyon connectivity for the word: ' + '"' + knotlist[j] + '"', fontsize=20)
         nx.draw_circular(G, node_color=colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
-        plt.savefig('networkx_knot_' + j.__str__() +'.png')
+        plt.savefig('networkx_knot_' + j.__str__().zfill(3) +'.png')
         plt.close(fig)
 
     # Generate animated GIF
 
     fp_in = "networkx_knot_*.png"
-    fp_out = "networkx_knot.gif"
+    fp_out = "networkx_knots.gif"
 
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
     img.save(fp=fp_out, format='GIF', append_images=imgs,
@@ -746,13 +793,13 @@ if plot_networkx_connections_braids == True:
         plt.title('Anyon braids for the word: ' + '"' + knotlist[j] + '"', fontsize=20)
         pos = nx.spring_layout(G,iterations=200)       
         nx.draw_networkx(G, pos=pos, node_color=colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
-        plt.savefig('networkx_braid_' + j.__str__() +'.png')
+        plt.savefig('networkx_braid_' + j.__str__().zfill(3) +'.png')        
         plt.close(fig)
 
     # Generate animated GIF
 
     fp_in = "networkx_braid_*.png"
-    fp_out = "networkx_braid.gif"
+    fp_out = "networkx_braids.gif"
 
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
     img.save(fp=fp_out, format='GIF', append_images=imgs,
@@ -983,7 +1030,7 @@ def update_title_image(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_variants/variant_anyons_" + (value).__str__() + ".png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_variants/variant_anyons_" + (value).__str__().zfill(3) + ".png"
         )
     )
     fig.update_layout(
@@ -1106,7 +1153,7 @@ def update_poem_braids(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_braids/networkx_braid_7.png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_braids/networkx_braid_007.png"
         )
     )
     fig.update_layout(
@@ -1147,7 +1194,7 @@ def update_poem_knots(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_knots/networkx_knot_7.png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_knots/networkx_knot_007.png"
         )
     )
     fig.update_layout(
@@ -1188,7 +1235,7 @@ def update_poem_variants(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_variants/variant_anyons_7.png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_variants/variant_anyons_007.png"
         )
     )
     fig.update_layout(

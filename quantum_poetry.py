@@ -17,7 +17,7 @@
 generate_anyons = True
 generate_variants = True
 generate_networkx_edges = True
-generate_qubits = True
+generate_qubits = False
 generate_erdos_parameter = False
 generate_erdos_equivalence = False
 generate_adjacency = False
@@ -40,6 +40,8 @@ write_log = True
 import numpy as np
 import pandas as pd
 import scipy as sp
+# import math
+# math.log(N,2) for entropy calculations
 import random
 from random import randint
 from random import randrange
@@ -63,12 +65,11 @@ from plotly.subplots import make_subplots
 from skimage import io
 import glob
 from PIL import Image
-# NLP Libraries
-# ML Libraries
-# App Libraries
 # Silence library version notifications
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+# NLP Libraries
+# ML Libraries
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -118,16 +119,17 @@ def parse_poem(input_file):
 
     print('parsing poem ...')
 
-    # Store text as a single string and lines in a list
+    # Store lines in a list
 
     linelist = []
     with open (input_file, 'rt') as f:      
         for line in f:   
             if len(line)>1: # ignore empty lines                  
                 linelist.append(line.strip())   
-#                linelist.append(line.rstrip('\n'))
             else:
                 continue
+
+    # Store text as a single string
 
     textstr = ''
     for i in range(len(linelist)):
@@ -469,8 +471,8 @@ def compute_variants(linelist, anyonarray):
                 poemsorted.append(poem[lineidx.index(k)])
             allpoems.append(poemsorted)
             allpoemsidx.append(lineidx)            
-#            dp = pd.DataFrame(poemsorted)
-#            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+            dp = pd.DataFrame(poemsorted)
+            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1).zfill(3)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
 
     nvariants = variant
     
@@ -519,11 +521,11 @@ textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, b
 
 # Counts
         
-nsentences = len(sentencelist)    # --> 10    
-nlines = len(linelist)            # --> 26
-nwords = len(wordlist)            # --> 222
-nunique = len(uniquewordlist)     # --> 134
-nknots = len(knotlist)            # --> 30
+nsentences = len(sentencelist)    # --> 4
+nlines = len(linelist)            # --> 8
+nwords = len(wordlist)            # --> 98
+nunique = len(uniquewordlist)     # --> 59
+nknots = len(knotlist)            # --> 20
 
 if generate_networkx_edges == True:
     nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
@@ -749,7 +751,7 @@ if plot_networkx_connections_knots == True:
     # Generate animated GIF
 
     fp_in = "networkx_knot_*.png"
-    fp_out = "networkx_knot.gif"
+    fp_out = "networkx_knots.gif"
 
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
     img.save(fp=fp_out, format='GIF', append_images=imgs,
@@ -801,7 +803,7 @@ if plot_networkx_connections_braids == True:
     # Generate animated GIF
 
     fp_in = "networkx_braid_*.png"
-    fp_out = "networkx_braid.gif"
+    fp_out = "networkx_braids.gif"
 
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
     img.save(fp=fp_out, format='GIF', append_images=imgs,
