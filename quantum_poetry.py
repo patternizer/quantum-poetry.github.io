@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------
 # PROGRAM: worldlines.py
 #------------------------------------------------------------------------------
-# Version 0.7
-# 24 June, 2020
+# Version 0.9
+# 2 July, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -13,23 +13,25 @@
 
 #------------------------------------------------------------------------------
 # SETTINGS
-write_log = True
-plot_branchpoint_table = False
-plot_networkx_connections = False
-plot_networkx_connections_knots = False
-plot_networkx_connections_braids = False
-plot_networkx_non_circular = False
-compute_erdos_parameter = False
-compute_erdos_equivalence = False
-generate_adjacency = False
-
+#------------------------------------------------------------------------------
 generate_anyons = True
 generate_variants = True
-plot_variants = True
-
-generate_qubits = False
+generate_networkx_edges = True
+generate_qubits = True
+generate_erdos_parameter = False
+generate_erdos_equivalence = False
+generate_adjacency = False
 qubit_logic = False
+plot_branchpoint_table = True
+plot_networkx_connections = True
+plot_networkx_non_circular = True
+plot_networkx_erdos_parameter = False
+plot_networkx_erdos_equivalence = False
+plot_networkx_connections_knots = True
+plot_networkx_connections_braids = True
+plot_variants = True
 machine_learning = False
+write_log = True
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -38,6 +40,9 @@ machine_learning = False
 import numpy as np
 import pandas as pd
 import scipy as sp
+import random
+from random import randint
+from random import randrange
 # Text Parsing libraries:
 import re
 from collections import Counter
@@ -49,11 +54,21 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import colors as mcol
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
 import plotly.express as px
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
+from plotly.subplots import make_subplots
+from skimage import io
+import glob
+from PIL import Image
 # NLP Libraries
 # ML Libraries
 # App Libraries
-
+# Silence library version notifications
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -95,133 +110,143 @@ def rgb2hex(colorin):
     g = int(colorin.split('(')[1].split(')')[0].split(',')[1])
     b = int(colorin.split('(')[1].split(')')[0].split(',')[2])
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
-#------------------------------------------------------------------------------
 
-input_file = 'poem.txt'
+def parse_poem(input_file):
+    """
+    Text parsing of poem and construction of branchpoint array
+    """
 
-# Store text as a single string and lines in a list
+    print('parsing poem ...')
 
-textstr = ''
-linelist = []
-with open (input_file, 'rt') as f:      
-    for line in f:   
-        if len(line)>1: # ignore empty lines                 
-            linelist.append(line.rstrip('\n'))
-            textstr = textstr + line.rstrip('\n')
+    # Store text as a single string and lines in a list
+
+    linelist = []
+    with open (input_file, 'rt') as f:      
+        for line in f:   
+            if len(line)>1: # ignore empty lines                  
+                linelist.append(line.strip())   
+#                linelist.append(line.rstrip('\n'))
+            else:
+                continue
+
+    textstr = ''
+    for i in range(len(linelist)):
+        if i < len(linelist) - 1:
+            textstr = textstr + linelist[i] + ' '
+        else:
+            textstr = textstr + linelist[i]
+        
+    # extract sentences into list 
+    # (ignore last entry which is '' due to final full stop)
+            
+    sentencelist = textstr.split('.')[0:-1] 
+
+    # Clean text and lower case all words
+
+    str = textstr
+    for char in '-.,\n':
+        str = str.replace(char,' ')
+
+    str = str.lower() 
+    wordlist = str.split()
+
+    # Store unique words in an array
+
+    uniquewordlist = []
+    for word in wordlist:           
+        if word not in uniquewordlist:
+            uniquewordlist.append(word)
+                    
+    # Word frequencies
+        
+    wordfreq = Counter(wordlist).most_common() # --> wordfreq[0][0] = 'the' and wordfreq[0][1] = '13'
+
+    # Find knots having word frequency > 1
+
+    knotlist = []
+    for word in range(len(wordfreq)-1):
+        if wordfreq[word][1] > 1:
+            knotlist.append(wordfreq[word][0])
         else:
             continue
 
-# extract sentences into list
-            
-sentencelist = textstr.split('.')
-sentencelist = sentencelist[0:-1] # ignore last entry which is '' due to final full stop
+    # Branchpoint index array
 
-# Clean text and lower case all words
-
-str = textstr
-for char in '-.,\n':
-    str = str.replace(char,' ')
-str = str.lower() 
-wordlist = str.split()
-
-# Store unique words in an array
-
-uniquewordlist = []
-for word in wordlist:           
-    if word not in uniquewordlist:
-        uniquewordlist.append(word)
-                    
-# Word frequencies
-        
-wordfreq = Counter(wordlist).most_common() # --> wordfreq[0][0] = 'the' and wordfreq[0][1] = '13'
-
-# Find knots having word frequency > 1
-
-knotlist = []
-for word in range(len(wordfreq)-1):
-    if wordfreq[word][1] > 1:
-        knotlist.append(wordfreq[word][0])
-    else:
-        continue
-
-# Counts
-        
-nsentences = len(sentencelist)    # --> 10
-nlines = len(linelist)            # --> 26
-nwords = len(wordlist)            # --> 222
-nunique = len(uniquewordlist)     # --> 134
-nknots = len(knotlist)            # --> 30
-
-# Branchpoint index array
-
-maxbranches = wordfreq[0][1]
-branchpointarray = np.zeros((nknots, maxbranches), dtype='int')
-for k in range(len(knotlist)):  
-    index = []
-    for i, j in enumerate(wordlist):
-        if j == knotlist[k]:
-            index.append(i)            
-    branchpointarray[k,0:len(index)] = index
- 
-df = pd.DataFrame(branchpointarray)
-df.to_csv('branchpointarray.csv', sep=',', index=False, header=False, encoding='utf-8')
-    
-#------------------------------------------------------------------------------
-# CONSTRUCT COLORMAP
-#------------------------------------------------------------------------------
-
-freq = [ wordfreq[i][1] for i in range(len(wordfreq)) ]
-nlabels = nknots
-cmap = px.colors.diverging.Spectral
-cmap_idx = np.linspace(0,len(cmap)-1, nlabels, dtype=int)
-colors = [cmap[i] for i in cmap_idx]
-hexcolors = [ rgb2hex(colors[i]) for i in range(len(colors)) ]
-    
-knot_colormap = []
-for k in range(nwords):    
-    knot_colormap.append('lightgrey')              
-for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots            
-    for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
-        knot_colormap[branchpointarray[j,i]] = hexcolors[j] 
-
-#------------------------------------------------------------------------------
-                                  
-if plot_branchpoint_table:
-    
-    #--------------------------------------------------------------------------
-    # BRANCHPOINT PLOT
-    #--------------------------------------------------------------------------
-
-    print('plotting_branchpoint_table ...')
-
-    # Reconstruction test: colour branchpoints with knot connectivity
-    fig, ax = plt.subplots(figsize=(15,10))
-    plt.plot(np.arange(0,len(wordlist)), np.zeros(len(wordlist)))
+    maxbranches = wordfreq[0][1]
+    branchpointarray = np.zeros((len(knotlist), maxbranches), dtype='int')
     for k in range(len(knotlist)):  
-        plt.plot(np.arange(0,len(wordlist)), np.ones(len(wordlist))*k, color='black')
-        a = branchpointarray[k,:]
-        vals = a[a>0]
-#        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, color=hexcolors[k])
-        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, facecolors=hexcolors[k], edgecolors='black')                
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlabel('word n in text', fontsize=20)
-    plt.ylabel('knot k in text (>1 connection)', fontsize=20)
-    plt.title('Branch Analysis Plot', fontsize=20)
-    plt.gca().invert_yaxis()    
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
-    plt.savefig('branchplot.png')
-    plt.close(fig)
-
-if plot_networkx_connections:
+        index = []
+        for i, j in enumerate(wordlist):
+            if j == knotlist[k]:
+                index.append(i)            
+        branchpointarray[k,0:len(index)] = index
     
-    #--------------------------------------------------------------------------
-    # NETWORK CONNECTIVITY PLOT - G
-    #--------------------------------------------------------------------------
-        
-    print('plotting_networkx_connections ...')
+    # Filter out multiple knot in single line only occurences
+    # using word indices of knots and line start and end indices
+
+    lineindices = []    
+    wordcount = 0
+    for i in range(len(linelist)):
+        linelen = len(linelist[i].split())
+        lineindices.append([i, wordcount, wordcount+linelen-1])
+        wordcount += linelen
+                    
+    mask = []
+    branchlinearray = []        
+    for i in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
+        knotindices = branchpointarray[i,:][branchpointarray[i,:]>0]
+        linecounter = 0 
+        for j in range(len(linelist)):                     
+            knotcounter = 0
+            for k in range(len(knotindices)):
+                if knotindices[k] in np.arange(lineindices[j][1],lineindices[j][2]+1):
+                    knotcounter += 1
+                    branchlinearray.append([j,i,lineindices[j][1],knotindices[k],lineindices[j][2]])            
+            if knotcounter > 0:
+                linecounter += 1                    
+        if linecounter < 2:
+            mask.append(i)            
+
+    a = np.array(branchpointarray)
+    b = knotlist
+    for i in range(len(mask)):
+        a = np.delete(a,mask[i]-i,0)        
+        b = np.delete(b,mask[i]-i,0)        
+    branchpointarray = a
+    knotlist = list(b)
+  
+    db = pd.DataFrame(branchpointarray)
+    db.to_csv('branchpointarray.csv', sep=',', index=False, header=False, encoding='utf-8')
+
+    return textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray
+
+def generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray):
+    """
+    Generate colormap using hexcolors for all knots
+    """
+
+    print('generating knot_colormap ...')
+
+    freq = [ wordfreq[i][1] for i in range(len(wordfreq)) ]
+    nlabels = nknots
+    cmap = px.colors.diverging.Spectral
+    cmap_idx = np.linspace(0,len(cmap)-1, nlabels, dtype=int)
+    colors = [cmap[i] for i in cmap_idx]
+    hexcolors = [ rgb2hex(colors[i]) for i in range(len(colors)) ]
+    
+    knot_colormap = []
+    for k in range(nwords):    
+        knot_colormap.append('lightgrey')              
+
+    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots            
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knot_colormap[branchpointarray[j,i]] = hexcolors[j] 
+
+    return  knot_colormap, hexcolors
+
+def compute_networkx_edges(nwords, wordlist, branchpointarray):
+            
+    print('computing_networkx_edges ...')
     
     # Construct edgelist, labellist
     
@@ -230,14 +255,8 @@ if plot_networkx_connections:
 
     df = pd.DataFrame()
     
-    # Plot wordfreq colour-coded networkx graph of connectivity
-    
-    fig, ax = plt.subplots(figsize=(15,10))    
     G = nx.Graph()
     G.add_edges_from(edgelist)
-#    G.add_nodes_from(wordlist)
-#    G.add_nodes_from(labellist)
-#    [ G.add_node(wordlist[i]) for i in range(len(wordlist)-1) ]        
     for node in G.nodes():
         G.nodes[node]['label'] = labellist[node]
 
@@ -254,125 +273,10 @@ if plot_networkx_connections:
                 if knotindices[i] > 0:
                     knotedges.append([knotindices[i], connections[k]])
         G.add_edges_from(knotedges)        
-        for l in range(int(len(knotedges)/2)): # NB 2-driectional edges
-            edge_colormap.append(hexcolors[j])
-#    edge_colormap = [G[u][v]['color'] for u,v in edges]        
-#    nx.draw_circular(G, node_color=knot_colormap, edge_color=edge_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-    nx.draw_circular(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-    plt.title('Networkx (circularly connected): N(edges)=' + "{0:.0f}".format(len(G.edges)))
-    plt.savefig('networkx.png')
-    plt.close(fig)
 
+#        for l in range(int(len(knotedges)/2)): # NB 2-driectional edges
+#            edge_colormap.append(hexcolors[j])
     nedges = len(G.edges)
-    
-if plot_networkx_connections_knots:
-    
-    #--------------------------------------------------------------------------
-    # NETWORK CONNECTIVITY PLOT PER KNOT 
-    #--------------------------------------------------------------------------
-
-    print('plotting_networkx_connections_knots ...')
-
-    # Construct edgelist, labellist
-    
-    edgelist = [(i,i+1) for i in range(nwords-1)]
-    labellist = [{i : wordlist[i]} for i in range(nwords)]
-
-    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
-        
-    # Plot wordfreq colour-coded networkx graph of connectivity
-     
-        fig, ax = plt.subplots(figsize=(15,10))    
-        G = nx.DiGraph()
-        G.add_edges_from(edgelist)
-        for node in G.nodes():
-            G.nodes[node]['label'] = labellist[node]
-
-        knotedges = []
-        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
-            knotindices = branchpointarray[j,:]
-            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
-            for k in range(len(connections)):
-                if knotindices[i] > 0:
-                    knotedges.append([knotindices[i], connections[k]])
-        G.add_edges_from(knotedges)
-
-        # Colormap per knot
-    
-        colormap = []
-        for k in range(nwords):
-            colormap.append('lightgrey')              
-        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
-            knotindices = branchpointarray[j,:]
-            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
-            if knotindices[i] > 0:
-                colormap[branchpointarray[j,i]] = hexcolors[j] 
-        
-        plt.title('Anyon connectivity for the word: ' + '"' + knotlist[j] + '"', fontsize=20)
-        nx.draw_circular(G, node_color=colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-        plt.savefig('networkx_knot_' + j.__str__() +'.png')
-        plt.close(fig)
-        
-if plot_networkx_connections_braids:
-    
-    #--------------------------------------------------------------------------
-    # BRAIDS PER KNOT
-    #--------------------------------------------------------------------------
-
-    print('plotting_networkx_connections_braids ...')
-
-    # Construct edgelist, labellist
-    
-    edgelist = [(i,i+1) for i in range(nwords-1)]
-    labellist = [{i : wordlist[i]} for i in range(nwords)]
-
-    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
-        
-        fig, ax = plt.subplots(figsize=(15,10))    
-        G = nx.DiGraph()
-        G.add_edges_from(edgelist)
-        for node in G.nodes():
-            G.nodes[node]['label'] = labellist[node]
-
-        knotedges = []
-        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
-            knotindices = branchpointarray[j,:]
-            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
-            for k in range(len(connections)):
-                if knotindices[i] > 0:
-                    knotedges.append([knotindices[i], connections[k]])
-        G.add_edges_from(knotedges)
-
-#        paths = nx.all_simple_paths(G, source=0, target=(nwords-1))
-#        paths = nx.shortest_path(G, source=0, target=(nwords-1))
-#        paths = nx.single_source_shortest_path(G, source=0, target=(nwords-1)) 
-#        paths = nx.all_shortest_paths(G, source=0, target=(nwords-1), weight=None, method='dijkstra')
-#        paths = nx.all_shortest_paths(G, source=0, target=(nwords-1), weight=None, method='bellman-ford')
-
-        # Colormap per knot
-    
-        colormap = []
-        for k in range(nwords):
-            colormap.append('lightgrey')              
-        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
-            knotindices = branchpointarray[j,:]
-            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
-            if knotindices[i] > 0:
-                colormap[branchpointarray[j,i]] = hexcolors[j] 
-        
-        plt.title('Anyon braids for the word: ' + '"' + knotlist[j] + '"', fontsize=20)
-        pos = nx.spring_layout(G,iterations=200)       
-        nx.draw_networkx(G, pos=pos, node_color=colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-        plt.savefig('networkx_braid_' + j.__str__() +'_.png')
-        plt.close(fig)
-
-if plot_networkx_non_circular:
-
-    #--------------------------------------------------------------------------
-    # PLOT NETWORK KNOT CONNECTIVITY
-    #--------------------------------------------------------------------------
-
-    print('plotting_networkx_non_circular ...')
 
     # Generate non-circular form of the networkx graph
 
@@ -390,42 +294,35 @@ if plot_networkx_non_circular:
     N.remove_edges_from(edgelist)
     N_degrees = [degree for node,degree in dict(N.degree()).items()] # degree of nodes
     notknots = [ node for node,degree in dict(N.degree()).items() if degree == 0 ] # each node in circular graph has 2 neighbours at start
-
-    fig, ax = plt.subplots(figsize=(15,10))
-    nx.draw_circular(N, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-    plt.title('Networkx (non-circularly connected): N(edges)=' + "{0:.0f}".format(len(N.edges)))
-    plt.savefig('networkx_non_circular.png')
-        
-if compute_erdos_parameter:
-
-    #--------------------------------------------------------------------------
-    # ERDOS-RENYI ESTIMATE
-    #--------------------------------------------------------------------------
-
+            
+    return nedges, notknots, G, N
+    
+def compute_erdos_parameter(nwords, nedges):
+    """
+    Compute Erdos-Renyi parameter estimate
+    """
+    
     print('computing_erdos_parameter ...')
 
-    import random
+    edgelist = [(i,i+1) for i in range(nwords-1)]
     for connectivity in np.linspace(0,1,1000001):
         random.seed(42)
         E = nx.erdos_renyi_graph(nwords, connectivity)
         erdosedges = len(E.edges)
         if erdosedges == (nedges-len(edgelist)):            
-            print("{0:.6f}".format(connectivity))
-            print("{0:.6f}".format(erdosedges))
-            break
-    nerdosedges = len(E.edges)
+#            print("{0:.6f}".format(connectivity))
+#            print("{0:.6f}".format(erdosedges))
+            nerdosedges = len(E.edges)
+            return nerdosedges, connectivity, E
+#            break
+#    nerdosedges = len(E.edges)
+        
+#    return nerdosedges, connectivity, E
 
-    fig, ax = plt.subplots(figsize=(15,10))
-    nx.draw_circular(E, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-    plt.title('Erdős-Rényi Model: p=' + "{0:.6f}".format(connectivity) + ', N(edges)=' + "{0:.0f}".format(nerdosedges))
-    plt.savefig('networkx_erdos.png')
-    plt.close(fig)
-
-if compute_erdos_equivalence:
-
-    #--------------------------------------------------------------------------
-    # ERDOS-RENYI EQUIVALENCE
-    #--------------------------------------------------------------------------
+def compute_erdos_equivalence(nwords, nedges, N, notknots):
+    """
+    Compute Erdos-Renyi equivalence probability
+    """
 
     print('computing_erdos_equivalence ...')
 
@@ -433,71 +330,26 @@ if compute_erdos_equivalence:
 
     N.remove_nodes_from(notknots)
     mapping = { np.array(N.nodes)[i]:i for i in range(len(N.nodes)) }
-    H = nx.relabel_nodes(N,mapping)
-            
-#    Ecopy = E.copy()
-#    Ecopy.remove_edge(a,b)
-#    Ecopy.add_edge(c,d)
-    
+    H = nx.relabel_nodes(N,mapping)                
     maxdiff = len(H.edges)
-    for i in range(100001):
-        fig, ax = plt.subplots(figsize=(15,10))
+    iterations = 100000
+    for i in range(iterations+1):
+
         E = nx.erdos_renyi_graph(len(H.nodes), connectivity)
         diff = H.edges - E.edges        
         if len(diff) < maxdiff:
             maxdiff = len(diff)
-            common = H.edges - diff            
-            nx.draw_circular(E, node_color='lightgrey', node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)
-            plt.title('Erdős-Rényi Model (equivalent): N(common edges)=' + "{0:.0f}".format(len(N.edges)-len(diff)))
-            plt.savefig('networkx_erdos' + '_' + "{0:.0f}".format(i) + '.png')
-        
-if generate_adjacency:
-
-    #--------------------------------------------------------------------------
-    # CALCULATE ADJACENCY MATRIX FROM GRAPH
-    #--------------------------------------------------------------------------
-
-    print('generating_adjacency ...')
-
-
-    G = nx.DiGraph()
-#    G.add_edges_from(edgelist)
-    for node in G.nodes():
-        G.nodes[node]['label'] = labellist[node]
-    for j in range(np.size(branchpointarray, axis=1)): # i.e. nknots        
-        knotedges = []
-        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
-            knotindices = branchpointarray[j,:]
-            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
-            for k in range(len(connections)):
-                knotedges.append([knotindices[i], connections[k]])
-        G.add_edges_from(knotedges)            
-
-    A = nx.adjacency_matrix(G)
-#    A.setdiag(A.diagonal()*2)
-
-    df = pd.DataFrame(A.todense()) # convert sparse matrix to square array
-    df.to_csv('adjacency_matrix.csv', sep=',', index=False, header=False, encoding='utf-8')
-
-    # REPRODUCIBILITY TEST: plot from adjacency matrix
+            commonedges = H.edges - diff      
+            pEquivalence = i/iterations
+            Equivalence = E
             
-#    A = pd.read_csv('adjacency_matrix.csv', index_col=0)
+    return commonedges, pEquivalence, Equivalence
 
-#    fig, ax = plt.subplots(figsize=(15,10))
-#    G = nx.from_numpy_matrix(np.array(A))
-#    nx.draw_circular(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)    
-#    plt.savefig('networkx_adjacency.png')
+def compute_anyons(linelist, wordlist, branchpointarray):
+    """
+    Anyon construction: braiding
+    """
 
-#    fig, ax = plt.subplots(figsize=(15,10))
-#    G = nx.DiGraph(A.values)
-#    nx.draw_networkx(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='bold', with_labels=True)
-#    plt.savefig('networkx_adjacency2.png')
-
-if generate_anyons:
-
-    #--------------------------------------------------------------------------
-    # ANYON CONSTRUCTION: BRAIDING
-    #--------------------------------------------------------------------------
     print('generating_anyons ...')
 
     # Compute start and end word indices for each line of the poem
@@ -506,7 +358,7 @@ if generate_anyons:
     wordcount = 0
     for i in range(len(linelist)):
         linelen = len(linelist[i].split())
-        lineindices.append([i,wordcount,wordcount+linelen-1])
+        lineindices.append([i, wordcount, wordcount+linelen-1])
         wordcount += linelen
                     
     # For each line find word indices to and from each knot
@@ -548,18 +400,24 @@ if generate_anyons:
                 anyon_post = wordlist[c[k,3]+1:c[k,4]+1]
                 anyon = anyon_pre + anyon_post
                 anyonarray.append( [i ,c[k,0], knotlist[a[j,1]], anyon, a[j,2], a[j,3], a[j,4] ])
+
     df = pd.DataFrame(anyonarray)
     df.to_csv('anyonarray.csv', sep=',', index=False, header=False, encoding='utf-8')
-                                                      
-if generate_variants:
 
-    #--------------------------------------------------------------------------
-    # VARIANT CONSTRUCTION
-    #--------------------------------------------------------------------------
+    return anyonarray
+    
+def compute_variants(linelist, anyonarray):
+    
+    """
+    Variant construction
+    """
+
     print('generating_variants ...')
 
     # generate variants of the poem
     
+    df = pd.DataFrame(anyonarray)
+
     allpoemsidx = []
     allpoems = []
     allidx = []
@@ -604,16 +462,18 @@ if generate_variants:
                 poem.append(df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][3].values[0])
                 lines = np.setdiff1d(lines,lineidx)   
         
-            variant += 1        
+            variant += 1     
+                        
             poemsorted = []
             for k in range(len(lineidx)):
                 poemsorted.append(poem[lineidx.index(k)])
             allpoems.append(poemsorted)
             allpoemsidx.append(lineidx)            
-            dp = pd.DataFrame(poemsorted)
-            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+#            dp = pd.DataFrame(poemsorted)
+#            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
 
     nvariants = variant
+    
     di = pd.DataFrame(allpoemsidx)
     di.to_csv('poem_allidx.csv', sep=',', index=False, header=False, encoding='utf-8')
     da = pd.DataFrame(allpoems)
@@ -621,13 +481,147 @@ if generate_variants:
     dl = pd.DataFrame(allidx)
     dl.to_csv('allidx.csv', sep=',', index=False, header=False, encoding='utf-8')
 
-if plot_variants:
+    return nvariants, allpoemsidx, allpoems, allidx
 
-    #--------------------------------------------------------------------------
-    # PLOT POEM VARIANTS
-    #--------------------------------------------------------------------------
+def generate_qubits():
+    """
+    Qubit contruction
+    """    
+
+    print('generating_qubits ...')
+
+def qubit_logic():
+    """
+    Apply gates to Bell states
+    """    
+
+    print('applying logic gates ...')
+
+def machine_learning():
+    """
+    Feature extraction
+    """    
+
+    print('extracting features ...')
+
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# LOAD POEM
+#------------------------------------------------------------------------------
+"""
+Poem to generate quantum variants from
+"""
+#input_file = 'poem.txt'
+input_file = 'poem-v1.txt'
+
+textstr, sentencelist, linelist, wordlist, uniquewordlist, wordfreq, knotlist, branchpointarray = parse_poem(input_file)
+
+# Counts
+        
+nsentences = len(sentencelist)    # --> 10    
+nlines = len(linelist)            # --> 26
+nwords = len(wordlist)            # --> 222
+nunique = len(uniquewordlist)     # --> 134
+nknots = len(knotlist)            # --> 30
+
+if generate_networkx_edges == True:
+    nedges, notknots, G, N = compute_networkx_edges(nwords, wordlist, branchpointarray)
+if generate_anyons == True:
+    anyonarray = compute_anyons(linelist, wordlist, branchpointarray)
+if generate_variants == True:
+    nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
+if generate_qubits == True:
+    print('generating_qubits ...')
+if generate_erdos_parameter == True:
+    nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
+if generate_erdos_equivalence == True:
+    commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notknots)
+if qubit_logic == True:
+    print('applying logic gates ...')
+if machine_learning == True:
+    print('extracting features ...')
+     
+# -----------------------------------------------------------------------------
+knot_colormap, hexcolors = generate_knot_colormap(wordfreq, nknots, nwords, branchpointarray)
+# -----------------------------------------------------------------------------
+
+if plot_branchpoint_table == True:
+    
+    print('plotting_branchpoint_table ...')
+
+    fig, ax = plt.subplots(figsize=(15,10))
+    plt.plot(np.arange(0,len(wordlist)), np.zeros(len(wordlist)))
+    for k in range(len(knotlist)):  
+        plt.plot(np.arange(0,len(wordlist)), np.ones(len(wordlist))*k, color='black')
+        a = branchpointarray[k,:]
+        vals = a[a>0]
+        plt.scatter(vals, np.ones(len(vals))*k, label=knotlist[k], s=100, facecolors=hexcolors[k], edgecolors='black')                
+
+    xticks = np.arange(0, len(wordlist)+0, step=10)
+    xlabels = np.array(np.arange(0, len(wordlist), step=10).astype('str'))
+    yticks = np.arange(0, len(knotlist), step=1)
+    ylabels = np.array(np.arange(0, len(knotlist), step=1).astype('str'))
+    plt.xticks(ticks=xticks, labels=xlabels)  # Set label locations
+    plt.yticks(ticks=yticks, labels=ylabels)  # Set label locations
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.xlabel('word n in text', fontsize=20)
+    plt.ylabel('knot k in text (>1 connection)', fontsize=20)
+    plt.title('Branch Analysis Plot', fontsize=20)
+    plt.gca().invert_yaxis()    
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    plt.savefig('branchplot.png')
+    plt.close(fig)
+
+if plot_networkx_connections == True:
+
+    print('plotting_networkx_connections ...')
+    
+    fig, ax = plt.subplots(figsize=(15,10))    
+    nx.draw_circular(G, node_color=knot_colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
+    plt.title('Networkx (circularly connected): N(edges)=' + "{0:.0f}".format(len(G.edges)), fontsize=20)
+    plt.savefig('networkx.png')
+    plt.close(fig)
+
+if plot_networkx_non_circular == True:
+
+    print('plotting_networkx_non_circular ...')
+
+    fig, ax = plt.subplots(figsize=(15,10))
+    nx.draw_circular(N, node_color=knot_colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
+    plt.title('Networkx (non-circularly connected): N(edges)=' + "{0:.0f}".format(len(N.edges)), fontsize=20)
+    plt.savefig('networkx_non_circular.png')
+
+if plot_networkx_erdos_parameter == True:
+    
+    print('plotting_networkx_erdos ...')
+
+    fig, ax = plt.subplots(figsize=(15,10))
+    nx.draw_circular(E, node_color=knot_colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
+    plt.title('Erdős-Rényi Model: p=' + "{0:.6f}".format(connectivity) + ', N(edges)=' + "{0:.0f}".format(nerdosedges), fontsize=20)
+    plt.savefig('networkx_erdos.png')
+    plt.close(fig)
+        
+if plot_networkx_erdos_equivalence == True:
+    
+    print('plotting_networkx_erdos_equivalence ...')
+
+    fig, ax = plt.subplots(figsize=(15,10))
+    nx.draw_circular(Eequivalence, node_color='lightgrey', node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
+    plt.title('Erdős-Rényi Model (equivalent): N(common edges)=' + "{0:.0f}".format(len(N.edges)-len(diff)), fontsize=20)
+    plt.savefig('networkx_erdos_equivalence.png')
+
+if plot_variants == True:
+
     print('plotting_variants ...')
     
+    di = pd.DataFrame(allpoemsidx)
+    da = pd.DataFrame(allpoems)
+    dl = pd.DataFrame(allidx)
+
     for i in range(nvariants):
 
         if i == 23:
@@ -691,12 +685,169 @@ if plot_variants:
         plt.yticks(fontsize=20)
         plt.xlabel('word in anyon', fontsize=20)
         plt.ylabel('line in text', fontsize=20)
-        plt.title('Aynon Plot', fontsize=20)
+        plt.title('Anyon Plot for variant: ' + i.__str__(), fontsize=20)
         plt.gca().invert_yaxis()    
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        plt.savefig('variant_anyons_' + i.__str__() +'.png')        
+        plt.savefig('variant_anyons_' + i.__str__().zfill(3) +'.png')        
         plt.close(fig)
+    
+    # Generate animated GIF
+
+    fp_in = "variant_anyons_*.png"
+    fp_out = "variant_anyons.gif"
+
+    img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
+#    img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in), key=os.path.getmtime)]    
+    img.save(fp=fp_out, format='GIF', append_images=imgs,
+         save_all=True, duration=1000, loop=0)
+    
+if plot_networkx_connections_knots == True:
+    
+    print('plotting_networkx_connections_knots ...')
+    
+    # Construct edgelist, labellist
+    
+    edgelist = [(i,i+1) for i in range(nwords-1)]
+    labellist = [{i : wordlist[i]} for i in range(nwords)]
+
+    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
+        
+    # Plot wordfreq colour-coded networkx graph of connectivity
+     
+        fig, ax = plt.subplots(figsize=(15,10))    
+        G = nx.DiGraph()
+        G.add_edges_from(edgelist)
+        for node in G.nodes():
+            G.nodes[node]['label'] = labellist[node]
+
+        knotedges = []
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knotindices = branchpointarray[j,:]
+            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
+            for k in range(len(connections)):
+                if knotindices[i] > 0:
+                    knotedges.append([knotindices[i], connections[k]])
+        G.add_edges_from(knotedges)
+
+        # Colormap per knot
+    
+        colormap = []
+        for k in range(nwords):
+            colormap.append('lightgrey')              
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knotindices = branchpointarray[j,:]
+            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
+            if knotindices[i] > 0:
+                colormap[branchpointarray[j,i]] = hexcolors[j] 
+        
+        plt.title('Anyon connectivity for the word: ' + '"' + knotlist[j] + '"', fontsize=20)
+        nx.draw_circular(G, node_color=colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
+        plt.savefig('networkx_knot_' + j.__str__().zfill(3) +'.png')
+        plt.close(fig)
+
+    # Generate animated GIF
+
+    fp_in = "networkx_knot_*.png"
+    fp_out = "networkx_knot.gif"
+
+    img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
+    img.save(fp=fp_out, format='GIF', append_images=imgs,
+         save_all=True, duration=1000, loop=0)
+    
+if plot_networkx_connections_braids == True:
+
+    print('plotting_networkx_connections_braids ...')
+
+    # Construct edgelist, labellist
+    
+    edgelist = [(i,i+1) for i in range(nwords-1)]
+    labellist = [{i : wordlist[i]} for i in range(nwords)]
+
+    for j in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
+        
+        fig, ax = plt.subplots(figsize=(15,10))    
+        G = nx.DiGraph()
+        G.add_edges_from(edgelist)
+        for node in G.nodes():
+            G.nodes[node]['label'] = labellist[node]
+
+        knotedges = []
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knotindices = branchpointarray[j,:]
+            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
+            for k in range(len(connections)):
+                if knotindices[i] > 0:
+                    knotedges.append([knotindices[i], connections[k]])
+        G.add_edges_from(knotedges)
+
+        # Colormap per knot
+    
+        colormap = []
+        for k in range(nwords):
+            colormap.append('lightgrey')              
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knotindices = branchpointarray[j,:]
+            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
+            if knotindices[i] > 0:
+                colormap[branchpointarray[j,i]] = hexcolors[j] 
+        
+        plt.title('Anyon braids for the word: ' + '"' + knotlist[j] + '"', fontsize=20)
+        pos = nx.spring_layout(G,iterations=200)       
+        nx.draw_networkx(G, pos=pos, node_color=colormap, node_size=300, linewidths=0.5, font_size=12, font_weight='normal', with_labels=True)
+        plt.savefig('networkx_braid_' + j.__str__().zfill(3) +'.png')
+        plt.close(fig)
+
+    # Generate animated GIF
+
+    fp_in = "networkx_braid_*.png"
+    fp_out = "networkx_braid.gif"
+
+    img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
+    img.save(fp=fp_out, format='GIF', append_images=imgs,
+         save_all=True, duration=1000, loop=0)
+            
+if generate_adjacency:
+
+    #--------------------------------------------------------------------------
+    # CALCULATE ADJACENCY MATRIX FROM GRAPH
+    #--------------------------------------------------------------------------
+
+    print('computing_adjacency ...')
+
+
+    G = nx.DiGraph()
+#    G.add_edges_from(edgelist)
+    for node in G.nodes():
+        G.nodes[node]['label'] = labellist[node]
+    for j in range(np.size(branchpointarray, axis=1)): # i.e. nknots        
+        knotedges = []
+        for i in range(np.size(branchpointarray, axis=1)): # i.e. maxfreq
+            knotindices = branchpointarray[j,:]
+            connections = knotindices[(knotindices != knotindices[i]) & (knotindices > 0)]
+            for k in range(len(connections)):
+                knotedges.append([knotindices[i], connections[k]])
+        G.add_edges_from(knotedges)            
+
+    A = nx.adjacency_matrix(G)
+#    A.setdiag(A.diagonal()*2)
+
+    df = pd.DataFrame(A.todense()) # convert sparse matrix to square array
+    df.to_csv('adjacency_matrix.csv', sep=',', index=False, header=False, encoding='utf-8')
+
+    # REPRODUCIBILITY TEST: plot from adjacency matrix
+            
+#    A = pd.read_csv('adjacency_matrix.csv', index_col=0)
+
+#    fig, ax = plt.subplots(figsize=(15,10))
+#    G = nx.from_numpy_matrix(np.array(A))
+#    nx.draw_circular(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='normal', with_labels=True)    
+#    plt.savefig('networkx_adjacency.png')
+
+#    fig, ax = plt.subplots(figsize=(15,10))
+#    G = nx.DiGraph(A.values)
+#    nx.draw_networkx(G, node_color=knot_colormap, node_size=500, linewidths=0.5, font_size=8, font_weight='bold', with_labels=True)
+#    plt.savefig('networkx_adjacency2.png')
 
 if generate_qubits:
 
