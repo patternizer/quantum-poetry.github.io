@@ -182,6 +182,15 @@ def parse_poem(input_file):
 
     # Branchpoint index array
 
+    maxbranches = wordfreq[0][1]
+    branchpointarray = np.zeros((len(knotlist), maxbranches), dtype='int')
+    for k in range(len(knotlist)):  
+        index = []
+        for i, j in enumerate(wordlist):
+            if j == knotlist[k]:
+                index.append(i)            
+        branchpointarray[k,0:len(index)] = index
+
     # Filter out multiple knot in single line only occurences
     # using word indices of knots and line start and end indices
 
