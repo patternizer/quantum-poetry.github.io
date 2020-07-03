@@ -2,7 +2,7 @@
 
 # Transdisciplinary Quantum Poetry
 
-[World Lines: A Quantum Supercomputer Poem] (https://www.amycatanzano.com/world-lines)
+## [World Lines: A Quantum Supercomputer Poem](https://www.amycatanzano.com/world-lines)
 
 A poem by [Amy Catanzano](https://www.amycatanzano.com) based on a theoretical model of a topological quantum computer
 
