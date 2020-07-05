@@ -15,4 +15,4 @@ N(lines)=8
 N(words)=98
 N(unique)=59
 N(knots)=20
-N(variants)=64
+N(variants)=94
