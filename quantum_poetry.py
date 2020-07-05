@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------
 # PROGRAM: worldlines.py
 #------------------------------------------------------------------------------
-# Version 0.9
-# 2 July, 2020
+# Version 0.10
+# 5 July, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -70,6 +70,15 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 # NLP Libraries
 # ML Libraries
+# App Deployment Libraries
+# import dash
+# import dash_core_components as dcc
+# import dash_html_components as html
+# import dash_bootstrap_components as dbc
+# from dash.dependencies import Input, Output, State
+# from flask import Flask
+# import json
+# import os
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -318,7 +327,6 @@ def compute_erdos_parameter(nwords, nedges):
             return nerdosedges, connectivity, E
 #            break
 #    nerdosedges = len(E.edges)
-        
 #    return nerdosedges, connectivity, E
 
 def compute_erdos_equivalence(nwords, nedges, N, notknots):
@@ -363,8 +371,9 @@ def compute_anyons(linelist, wordlist, branchpointarray):
         lineindices.append([i, wordcount, wordcount+linelen-1])
         wordcount += linelen
                     
-    # For each line find word indices to and from each knot
-
+    # For each knot find line index and word indices of line start, knot and line end
+    # branchlinearray: [line, knot, wordstart, wordknot, wordend] 
+    
     branchlinearray = []        
     for i in range(np.size(branchpointarray, axis=0)): # i.e. nknots        
         knotindices = branchpointarray[i,:][branchpointarray[i,:]>0]
@@ -384,7 +393,17 @@ def compute_anyons(linelist, wordlist, branchpointarray):
     for i in range(len(mask)):
         a = np.delete(a,mask[i]-i,0)        
     branchlinearray = a[a[:,0].argsort()]
-    # branchlinearray: [line, knot, wordstart, wordknot, wordend] 
+
+    # Filter out start of line and end of line occurring knots
+
+    a = np.array(branchlinearray)
+    mask = []
+    for i in range(len(branchlinearray)):
+        if ((a[i,2] == a[i,3]) | (a[i,3] == a[i,4])):
+            mask.append(i)
+    for i in range(len(mask)):
+        a = np.delete(a,mask[i]-i,0)        
+    branchlinearray = a[a[:,0].argsort()]
 
     # Anyons
     
@@ -395,13 +414,20 @@ def compute_anyons(linelist, wordlist, branchpointarray):
             break
         for j in range(len(a)):    
             anyon_pre = wordlist[a[j,2]:a[j,3]+1]
-            c = branchlinearray[(branchlinearray[:,1]==a[j,1]) & (branchlinearray[:,0]!=a[j,0])]             
-            if len(c) == 0:
+            b = branchlinearray[(branchlinearray[:,1]==a[j,1]) & (branchlinearray[:,0]!=a[j,0])]             
+
+            #######################################################
+            # For > 1 swaps, add additional anyon segment code here
+            # + consider case of forward in 'time' constraint
+            # + consider return to start line occurrence
+            #######################################################
+
+            if len(b) == 0:
                 break
-            for k in range(len(c)):
-                anyon_post = wordlist[c[k,3]+1:c[k,4]+1]
+            for k in range(len(b)):
+                anyon_post = wordlist[b[k,3]+1:b[k,4]+1]
                 anyon = anyon_pre + anyon_post
-                anyonarray.append( [i ,c[k,0], knotlist[a[j,1]], anyon, a[j,2], a[j,3], a[j,4] ])
+                anyonarray.append( [i, b[k,0], knotlist[a[j,1]], anyon, a[j,2], a[j,3], a[j,4] ])
 
     df = pd.DataFrame(anyonarray)
     df.to_csv('anyonarray.csv', sep=',', index=False, header=False, encoding='utf-8')
@@ -409,7 +435,6 @@ def compute_anyons(linelist, wordlist, branchpointarray):
     return anyonarray
     
 def compute_variants(linelist, anyonarray):
-    
     """
     Variant construction
     """
@@ -423,31 +448,29 @@ def compute_variants(linelist, anyonarray):
     allpoemsidx = []
     allpoems = []
     allidx = []
-    variant = 0
+    nvariants = 0
 
-    for j in range(len(linelist)):
-        for i in range(len(linelist)):
-            
+    for i in range(len(linelist)):      
+                
+        a = df[df[0]==i]
+        for j in range(len(a)):
+
             poem = []
             lineidx = []    
             lines = np.arange(len(linelist))    
         
             while len(lines)>0:
         
-                if len(lines) == len(linelist):
-                    a = df[df[0]==lines[j]]
-                else:
-                    a = df[df[0]==lines[0]]
-                linestart = a[0].values[0]
+                print(nvariants,i,j)
                 
-                if linestart == j:
-                    if i == len(a[1]):
-                        break
-                    else:
-                        lineend = a[1].values[i]
-                        knot = a[2].values[i]
-                else:      
-                    lineend = np.setdiff1d( np.unique(a[1].values), lineidx )[0]   
+                if len(lines) == len(linelist):
+                    linestart = a[0].values[j]
+                    lineend = a[1].values[j]
+                    knot = a[2].values[j]                    
+                else:
+                    b = df[df[0]==lines[0]]
+                    linestart = b[0].values[0]                
+                    lineend = np.setdiff1d( np.unique(b[1].values), lineidx )[0]   
                     knot = df[ (df[0]==linestart) & (df[1]==lineend) ][2].values[0]
                     
                 lineidx.append(linestart)    
@@ -458,25 +481,22 @@ def compute_variants(linelist, anyonarray):
                 knotendpre = df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][4].values[0]
                 knotend = df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][5].values[0]
                 knotendpro = df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][6].values[0]                
-                allidx.append([variant, linestart, lineend, knot, knotstartpre, knotstart, knotstartpro])
-                allidx.append([variant, lineend, linestart, knot, knotendpre, knotend, knotendpro])
+                allidx.append([nvariants, linestart, lineend, knot, knotstartpre, knotstart, knotstartpro])
+                allidx.append([nvariants, lineend, linestart, knot, knotendpre, knotend, knotendpro])
                 poem.append(df[ (df[0]==linestart) & (df[1]==lineend) & (df[2]==knot) ][3].values[0])
                 poem.append(df[ (df[0]==lineend) & (df[1]==linestart) & (df[2]==knot) ][3].values[0])
                 lines = np.setdiff1d(lines,lineidx)   
-        
-            variant += 1     
-                        
+         
+            nvariants += 1                                         
             poemsorted = []
             for k in range(len(lineidx)):
                 poemsorted.append(poem[lineidx.index(k)])
             allpoems.append(poemsorted)
-            allpoemsidx.append(lineidx)            
+            allpoemsidx.append(lineidx)                 
             dp = pd.DataFrame(poemsorted)
-            dp.to_csv('poem'+'_'+"{0:.0f}".format(variant-1).zfill(3)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
-
-    nvariants = variant
-    
-    di = pd.DataFrame(allpoemsidx)
+            dp.to_csv('poem'+'_'+"{0:.0f}".format(nvariants-1).zfill(3)+'.csv', sep=',', index=False, header=False, encoding='utf-8')
+ 
+    di = pd.DataFrame(allpoemsidx)    
     di.to_csv('poem_allidx.csv', sep=',', index=False, header=False, encoding='utf-8')
     da = pd.DataFrame(allpoems)
     da.to_csv('poem_all.csv', sep=',', index=False, header=False, encoding='utf-8')
@@ -505,7 +525,6 @@ def machine_learning():
     """    
 
     print('extracting features ...')
-
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -625,12 +644,9 @@ if plot_variants == True:
     dl = pd.DataFrame(allidx)
 
     for i in range(nvariants):
-
-        if i == 23:
-            continue
-        else:
-            connectorstart = []
-            connectorend = []
+          
+        connectorstart = []
+        connectorend = []
 
         fig, ax = plt.subplots(figsize=(15,10))
         for k in range(len(linelist)):  
@@ -656,8 +672,7 @@ if plot_variants == True:
                 y4 = np.ones(len(x4))*k
                 plt.plot(x3,y3,'blue')
                 plt.plot(x4,y4,'red')       
-                plt.scatter(x4[-1], y4[-1], s=100, facecolors=hexcolors[knotlist.index(knot)], edgecolors='black')
-                
+                plt.scatter(x4[-1], y4[-1], s=100, facecolors=hexcolors[knotlist.index(knot)], edgecolors='black')                
                 connectorstart.append([linestart, x3[0], y3[0]])                
                 connectorend.append([lineend, x4[-1], y4[-1]])     
 
