@@ -8,11 +8,11 @@ WORDLIST: ['when', 'we', 'think', 'as', 'far', 'as', 'our', 'world', 'lines', 'o
 
 UNIQUE WORDS: ['when', 'we', 'think', 'as', 'far', 'our', 'world', 'lines', 'thoughts', 'become', 'movements', 'in', 'space', 'motions', 'time', 'threads', 'curved', 'recording', 'the', 'mind', 'writing', 'relative', 'tangled', 'knotting', 'intricate', 'paths', 'like', 'strands', 'of', 'dna', 'intertwined', 'a', 'knot', 'is', 'continuous', 'curve', 'through', 'woven', 'locations', 'particles', 'traveling', 'their', 'orbits', 'spacetime', 'indefinite', 'location', 'record', 'that', 'its', 'knotted', 'history', 'poem', 'an', 'threaded', "mind's", 'computes', 'qubits', 'braided', 'memory']
 
-KNOTS (>1 connection): ['of', 'the', 'as', 'a', 'world', 'in', 'space', 'motions', 'mind', 'knot', 'lines', 'thoughts', 'writing', 'is', 'continuous', 'curve', 'orbits', 'indefinite', 'its', "mind's"]
+BRANCHPOINTS (>1 connection): ['of', 'the', 'as', 'a', 'world', 'in', 'space', 'motions', 'mind', 'knot', 'lines', 'thoughts', 'writing', 'is', 'continuous', 'curve', 'orbits', 'indefinite', 'its', "mind's"]
 
 N(sentences)=4
 N(lines)=8
 N(words)=98
 N(unique)=59
-N(knots)=20
+N(branchpoints)=20
 N(variants)=94
