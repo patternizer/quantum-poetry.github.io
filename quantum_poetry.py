@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#! /usr/bin/ python
+
 # -*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
@@ -90,9 +91,11 @@ def word_in_line(word, line):
     word, line - str
     returns    - True if word in line, False if not
     """
+
     pattern = r'(^|[^\w]){}([^\w]|$)'.format(word)
     pattern = re.compile(pattern, re.IGNORECASE)
     matches = re.search(pattern, text)
+
     return bool(matches)
 
 def discrete_colorscale(values, colors):
@@ -110,15 +113,18 @@ def discrete_colorscale(values, colors):
         colorscale.extend([[nvalues[k], colors[k]], [nvalues[k+1], colors[k]]])        
     tickvals = [((values[k]+values[k+1])/2.0) for k in range(len(values)-1)] 
     ticktext = [f'{int(values[k])}' for k in range(len(values)-1)]
+
     return colorscale, tickvals, ticktext
 
 def rgb2hex(colorin):
     """
     Convert (r,g,b) to hex
     """
+
     r = int(colorin.split('(')[1].split(')')[0].split(',')[0])
     g = int(colorin.split('(')[1].split(')')[0].split(',')[1])
     b = int(colorin.split('(')[1].split(')')[0].split(',')[2])
+
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
 def parse_poem(input_file):
@@ -326,8 +332,9 @@ def compute_erdos_parameter(nwords, nedges):
             nerdosedges = len(E.edges)
             return nerdosedges, connectivity, E
 #            break
-#    nerdosedges = len(E.edges)
-#    return nerdosedges, connectivity, E
+    nerdosedges = len(E.edges)
+
+    return nerdosedges, connectivity, E
 
 def compute_erdos_equivalence(nwords, nedges, N, notbranchpoints):
     """

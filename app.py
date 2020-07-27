@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+#! /usr/bin/ python
 
 #-----------------------------------------------------------------------
 # PROGRAM: app.py
@@ -16,20 +15,20 @@
 # ========================================================================
 generate_anyons = True
 generate_variants = True
-generate_networkx_edges = False
+generate_networkx_edges = True
 generate_qubits = False
-generate_erdos_parameter = False
+generate_erdos_parameter = True
 generate_erdos_equivalence = False
 generate_adjacency = False
 qubit_logic = False
-plot_branchpoint_table = False
-plot_networkx_connections = False
-plot_networkx_non_circular = False
-plot_networkx_erdos_parameter = False
+plot_branchpoint_table = True
+plot_networkx_connections = True
+plot_networkx_non_circular = True
+plot_networkx_erdos_parameter = True
 plot_networkx_erdos_equivalence = False
-plot_networkx_connections_branchpoints = False
-plot_networkx_connections_dags = False
-plot_variants = False
+plot_networkx_connections_branchpoints = True
+plot_networkx_connections_dags = True
+plot_variants = True
 machine_learning = False
 write_log = False
 #------------------------------------------------------------------------------
@@ -326,8 +325,9 @@ def compute_erdos_parameter(nwords, nedges):
             nerdosedges = len(E.edges)
             return nerdosedges, connectivity, E
 #            break
-#    nerdosedges = len(E.edges)       
-#    return nerdosedges, connectivity, E
+    nerdosedges = len(E.edges)    
+   
+    return nerdosedges, connectivity, E
 
 def compute_erdos_equivalence(nwords, nedges, N, notbranchpoints):
     """
@@ -554,7 +554,7 @@ if generate_variants == True:
     nvariants, allpoemsidx, allpoems, allidx = compute_variants(linelist, anyonarray)
 if generate_qubits == True:
     print('generating_qubits ...')
-if compute_erdos_parameter == True:
+if generate_erdos_parameter == True:
     nerdosedges, connectivity, E = compute_erdos_parameter(nwords, nedges)
 if compute_erdos_equivalence == True:
     commonedges, pEquivalence, Equivalence = compute_erdos_equivalence(nwords, nedges, N, notbranchpoints)
@@ -818,8 +818,8 @@ if plot_networkx_connections_dags == True:
 
     # Generate animated GIF
 
-    fp_in = "networkx_anyon_dag_*.png"
-    fp_out = "networkx_anyon_dags.gif"
+    fp_in = "networkx_dag_*.png"
+    fp_out = "networkx_dags.gif"
 
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
     img.save(fp=fp_out, format='GIF', append_images=imgs,
@@ -865,9 +865,11 @@ dropdown_variants = [{'label' : i, 'value' : i} for i in np.arange(nvariants)]
 
 server = Flask(__name__)
 server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, server=server, external_stylesheets=external_stylesheets)
+#external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP]
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 app.config.suppress_callback_exceptions = True
+
 
 app.layout = html.Div(children=[
 
@@ -903,8 +905,10 @@ app.layout = html.Div(children=[
 #        html.P([
         
             html.Label([ html.A('World Lines: A Quantum Supercomputer Poem (2018)', href='https://www.amycatanzano.com/world-lines')]),
+            html.Br(),                  
             html.Label("by Amy Catanzano"),
             html.Label("(one version of many possible)"),
+            html.Br(),                  
             html.Br(),                  
             html.Blockquote([
             html.Label("When we think as far as our world lines, our thoughts become movements"),
