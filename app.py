@@ -945,6 +945,30 @@ app.layout = html.Div(children=[
               
 
 # ------------
+    html.Div([                                                
+        html.P([html.H3(children='Quantum Poetry Machine'),
+            html.Label(["Select a topological quantum variant of ", html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem"))]),
+        ],               
+        style = {'padding' : '10px', 'display': 'inline-block'}),
+
+#        dbc.Button('Randomise', id='button', color="info", className="mr-1"),
+#        html.Div(id='container-button'),
+
+
+        dcc.Dropdown(
+            id = 'input-variant',
+            options = dropdown_variants,   
+            value = 0,
+            style = {'padding' : '10px', 'width': '100px', 'fontSize' : '20px', 'display': 'inline-block'}
+        ),    
+        
+        dcc.Graph(id='poem-variant', style = {'width': '100%'}),
+    ],    
+    style={'columnCount': 2}),
+# ------------
+
+
+# ------------
     html.Div([            
 
         html.P([html.H3(children='Branchpoint Analysis')], style = {'padding' : '10px', 'display': 'inline-block'}),
@@ -970,30 +994,6 @@ app.layout = html.Div(children=[
     style={'columnCount': 2}),
 # ------------
                        
-   
-# ------------
-    html.Div([                                                
-        html.P([html.H3(children='Quantum Poetry Machine'),
-            html.Label(["Select a topological quantum variant of ", html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem"))]),
-        ],               
-        style = {'padding' : '10px', 'display': 'inline-block'}),
-
-#        dbc.Button('Randomise', id='button', color="info", className="mr-1"),
-#        html.Div(id='container-button'),
-
-
-        dcc.Dropdown(
-            id = 'input-variant',
-            options = dropdown_variants,   
-            value = 0,
-            style = {'padding' : '10px', 'width': '100px', 'fontSize' : '20px', 'display': 'inline-block'}
-        ),    
-        
-        dcc.Graph(id='poem-variant', style = {'width': '100%'}),
-    ],    
-    style={'columnCount': 2}),
-# ------------
-
     ],
     style={'columnCount': 1})
 
@@ -1178,7 +1178,7 @@ def update_poem_anyon_dags(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_dags/networkx_dag_007.png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/networkx_dags.gif"
         )
     )
     fig.update_layout(
@@ -1219,7 +1219,7 @@ def update_poem_anyon_branchpoints(value):
             opacity=1.0,
             layer="below",
             sizing="stretch",
-            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/anyon_branchpoints/networkx_branchpoint_007.png"
+            source="https://raw.githubusercontent.com/patternizer/quantum_poetry/master/networkx_branchpoints.gif"
         )
     )
     fig.update_layout(
