@@ -15,20 +15,21 @@
 # ========================================================================
 generate_anyons = True
 generate_variants = True
-generate_networkx_edges = True
+
+generate_networkx_edges = False
 generate_qubits = False
-generate_erdos_parameter = True
+generate_erdos_parameter = False
 generate_erdos_equivalence = False
 generate_adjacency = False
 qubit_logic = False
-plot_branchpoint_table = True
-plot_networkx_connections = True
-plot_networkx_non_circular = True
-plot_networkx_erdos_parameter = True
+plot_branchpoint_table = False
+plot_networkx_connections = False
+plot_networkx_non_circular = False
+plot_networkx_erdos_parameter = False
 plot_networkx_erdos_equivalence = False
-plot_networkx_connections_branchpoints = True
-plot_networkx_connections_dags = True
-plot_variants = True
+plot_networkx_connections_branchpoints = False
+plot_networkx_connections_dags = False
+plot_variants = False
 machine_learning = False
 write_log = False
 #------------------------------------------------------------------------------
@@ -461,7 +462,7 @@ def compute_variants(linelist, anyonarray):
         
             while len(lines)>0:
         
-                print(nvariants,i,j)
+                # print(nvariants,i,j)
                 
                 if len(lines) == len(linelist):
                     linestart = a[0].values[j]
