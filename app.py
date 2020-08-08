@@ -3,8 +3,8 @@
 #-----------------------------------------------------------------------
 # PROGRAM: app.py
 #-----------------------------------------------------------------------
-# Version 0.4
-# 9 July, 2020
+# Version 0.5
+# 8 August, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -15,8 +15,7 @@
 # ========================================================================
 generate_anyons = True
 generate_variants = True
-
-generate_networkx_edges = False
+generate_networkx_edges = True
 generate_qubits = False
 generate_erdos_parameter = False
 generate_erdos_equivalence = False
@@ -943,28 +942,50 @@ app.layout = html.Div(children=[
     style={'columnCount': 2}),
 # ------------
               
-
 # ------------
-    html.Div([                                                
+    html.Div([      
+                                          
         html.P([html.H3(children='Quantum Poetry Machine'),
             html.Label(["Select a topological quantum variant of ", html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem"))]),
         ],               
         style = {'padding' : '10px', 'display': 'inline-block'}),
-
-#        dbc.Button('Randomise', id='button', color="info", className="mr-1"),
-#        html.Div(id='container-button'),
-
-
+        
+#        html.P([
+#            html.Br(),    
+#        ],
+#        style={'padding' : '10px', 'width': '100%', 'display': 'inline-block'}),        
+        
         dcc.Dropdown(
             id = 'input-variant',
             options = dropdown_variants,   
             value = 0,
-            style = {'padding' : '10px', 'width': '100px', 'fontSize' : '20px', 'display': 'inline-block'}
+            style = {'padding' : '10px', 'width': '100px', 'fontSize' : '15px', 'display': 'inline-block'}
         ),    
         
         dcc.Graph(id='poem-variant', style = {'width': '100%'}),
     ],    
-    style={'columnCount': 2}),
+    style={'columnCount': 1}), 
+
+# ------------
+
+
+# ------------
+    html.Div([      
+                                          
+        html.P([html.H3(children='Technical Description'),
+            html.Br(),                
+            html.Label(["An algorithm and quantum script has been written in the Python computer programming language to compute all possible versions of ", html.Em(html.Strong("World Lines")),". The first step of the algorithm parses each line of the text and identifies branch points, words that occur on another line, and stores their location indices. In the second step, these indices are used to compute the directed acylic graph (DAG) through the text, associated with each unique branch point. The set of DAGs forms a topological map that forms the basis for the quantum script in step three of the algorithm. The quantum nature of this step is implicit in the entanglement of all variants of the text in the topological map. Step three of the algorithm proceeds by disentanglement of unique variants of the text. This is achieved by extracting anyons, reconstructed lines of the text formed from prior and posterior segments of a path through a DAG passing through a branchpoint."]),
+            html.Br(),            
+            html.Label(["So for example, the word 'continuous' in line 4 of ", html.Em(html.Strong("World Lines")), " is a branchpoint as it occurs again on line 7. Two anyons associated with this connectivity in the DAG for 'continuous' then lead to a 'braiding' of lines 4 and 7 such that the prior segment of line 4 up to and including 'continuous' continues with the posterior segment of line 7 afer the recurrence of 'continuous'. Its entangled partner comprises the prior segment of line 7 up to and including 'continuous' and continues with the posterior segment of line 4 following 'continuous'. Each variant of the poem is extracted by retaining the original line order in prior segments and then braiding once per branchpoint. For the 8 lines of ", html.Em(html.Strong("World Lines")),", the qunatum script disentangles 94 variants from the poem's topological map."]),
+            html.Br(),            
+            html.Label(["This leads to four interesting potential applications. The first is the development of a linguistic processor trained to select variants that are semantically logical. As such, meaningful text is self-generated from a text allowing exploration of the nature of imagination itself. The second is the calculation of a statistical measure of the complexity of a text by joining its ends and using the branch point topology to cast it in the form of a G(n,p) Erdős–Rényi model. An optimisation algorithm has been written to deduce the value of the degree of randomness parameter, p for ", html.Em(html.Strong("World Lines")),". The third is the calculation of information entropy associated with each variant. Due to anyon braiding, each line of the text has a distinct and computable probability of ending on a different line. This enables the information entropy for each variant to be calculated. This may open a path for studying the relationship of imagined variations of a text and information theory. The fourth is as a quantum linguistic laboratory. Qubits are quantum bits formed from pairs of anyons. Start-of-line qubits are effectively entangled, in the quantum sense, with end-of-line qubits. The topological map encodes all text variants and therefore all entangled states in the one to many mapping of the original poem to its variants."]),
+            html.Br(),            
+            html.Label(["The algorithm and quantum script, by retaining linguistic continuity, creates a space and time for exploration of quantum entanglement and the visual imagination. Imagine a reader tracing a path through the text and interactively switching between variants dynamically by choosing the next braiding operation. The text is then reactive and many world."]),
+        ],               
+        style = {'padding' : '10px', 'display': 'inline-block'}),                
+    ],    
+    style={'columnCount': 1}), 
+                
 # ------------
 
 
@@ -1307,7 +1328,7 @@ def update_parameters(poem):
                 align='left')
         ),
     ]
-    layout = go.Layout(  height=300, width=1300, margin=dict(r=10, l=10, b=0, t=60))
+    layout = go.Layout(  height=300, width=1300, margin=dict(r=10, l=10, b=0, t=10))
     return {'data': data, 'layout':layout} 
 
 
