@@ -3,8 +3,8 @@
 #-----------------------------------------------------------------------
 # PROGRAM: app.py
 #-----------------------------------------------------------------------
-# Version 0.5
-# 8 August, 2020
+# Version 0.6
+# 9 August, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -865,8 +865,8 @@ dropdown_variants = [{'label' : i, 'value' : i} for i in np.arange(nvariants)]
 
 server = Flask(__name__)
 server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
-#external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-external_stylesheets = [dbc.themes.BOOTSTRAP]
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+#external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 app.config.suppress_callback_exceptions = True
 
@@ -879,21 +879,22 @@ app.layout = html.Div(children=[
 
     html.P([
 
-        html.Label( html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem")) ),         
-        html.Br(),    
+#        html.Label( html.Em(html.Strong("World Lines: A Quantum Supercomputer Poem")) ),         
+        html.H5([ html.A(html.Em(html.Strong('World Lines: A Quantum Supercomputer Poem (2018)')), href='https://www.amycatanzano.com/world-lines')]),
+#        html.Br(),    
         html.Label("A poem by Amy Catanzano based on a theoretical model of a topological quantum computer"),         
         html.Br(),
-        html.Label([html.U("Formats"), ": print publication (complete), computational poetry and interactive digital poetry (underway), 3D art installation (anticipated)"]),
+        html.Label(["Formats: print publication (complete), computational and web-based interactive (underway), 3D art installation (anticipated)"]),
         html.Br(),
-        html.Label([html.U("Collaborator for Phase 3"), ": Dr. Michael Taylor, applied mathematician and senior research associate in climate science at the University of East Anglia (Norwich, United Kingdom)"]),
+        html.Label(["Collaborator for Phase 2: Dr. Michael Taylor, applied mathematician and senior research associate in climate science at the University of East Anglia (Norwich, United Kingdom)"]),
         html.Br(),       
-        html.Label([html.U("Description"), ": ", html.Em("World Lines: A Quantum Supercomputer Poem"), " is a poem and poetic form invented by Amy Catanzano that is based on a theoretical model of a topological quantum computer. Phase 1 of the project is complete and was published by the Simons Center for Geometry and Physics at Stony Brook University. Additional poems by Amy Catanzano using this poetic form are underway in Phase 2."]),
+        html.Label(["Description: ", html.Em("World Lines: A Quantum Supercomputer Poem"), " is a poem and poetic form invented by Amy Catanzano that is based on a theoretical model of a topological quantum computer. Phase 1 of the project is complete and was presented by the Simons Center for Geometry and Physics at Stony Brook University. Additional poems by Catanzano in this poetic form being developed."]),
         html.Br(),                   
-        html.Label(["In Phase 3 of the project, underway, Michael Taylor is using the Python computer programming language and machine learning (artificial intelligence) to develop an algorithm and quantum script that computationally expresses all possible versions of ", html.Em("World Lines"), ". After parsing each sentence in the poem and identifying branch points, words that are in common, Dr. Taylor is training a linguistic processor to choose world lines that are semantically logical to track how different topological paths move through a text map into different versions of the poem. A web interface will be generated where, after a text is loaded, a ", html.Em("World Lines"), " algorithm could find the branch points and do one of two things: 1) allow the reader to manually navigate along a world line, creating a new poem as a re-structured sample of the text that could be stored and studied, and 2) run a simulation and generate world lines that the reader could choose between in order to render new poems. Visual poetry and artwork are being generated from the data."]),
+        html.Label(["In Phase 2 of the project, currently underway, Michael Taylor is using the Python computer programming language and machine learning (artificial intelligence) to develop an algorithm and quantum script that computationally expresses all possible versions of ", html.Em("World Lines"), ". After parsing each sentence in the poem and identifying branch points, words that are in common, Dr. Taylor is training a linguistic processor to choose world lines that are semantically logical to track how different topological paths move through a text map into different versions of the poem. A web interface will be generated where, after a text is loaded, a ", html.Em("World Lines"), " algorithm can find the branch points and do one of two things: 1) allow the reader to manually navigate along a world line, creating a new poem as a re-structured sample of the text that could be stored and studied, and 2) run a simulation and generate world lines that the reader can choose between in order to render new poems. Visual poetry and artwork are also being generated from the data."]),
         html.Br(),                   
-        html.Label("Phase 4 of the poem will involve creating a 3D art installation based on the poem."),
+        html.Label("Phase 3 of the poem will involve creating a 3D art installation based on the poem."),
         html.Br(),                         
-        html.Label([html.U("Anticipated outcomes for Phases 3-4"), ": computational poetry, visual poetry and artwork, evolution of quantum script writing, interactive web interface, investigation of quantum linguistics and information theory, educational tool in poetry and physics, 3D art installation."]),
+        html.Label(["Anticipated outcomes for Phases 2-3: computational poetry, visual poetry and artwork, evolution of quantum script writing, interactive web interface, investigation of quantum linguistics and information theory in relation to principles in poetics, educational tool for both poetry and physics, 3D art installation."]),
     ],
     style={'padding' : '10px', 'width': '100%', 'display': 'inline-block'},
     ),
@@ -901,14 +902,15 @@ app.layout = html.Div(children=[
 # ------------
     html.Div([            
 
-        html.P([html.H3(children='World Lines'),
+        html.P([html.H3(children=html.Em('World Lines')),
 #        html.P([
         
-            html.Label([ html.A('World Lines: A Quantum Supercomputer Poem (2018)', href='https://www.amycatanzano.com/world-lines')]),
-            html.Br(),                  
-            html.Label("by Amy Catanzano"),
-            html.Label("(one version of many possible)"),
-            html.Br(),                  
+            html.Label(html.Strong("A Quantum Supercomputer Poem (2018)") ),         
+#            html.Label([ html.A('World Lines: A Quantum Supercomputer Poem (2018)', href='https://www.amycatanzano.com/world-lines')]),
+#            html.Br(),                  
+#            html.Label("by Amy Catanzano"),
+#            html.Label("(one version of many possible)"),
+            html.Label("by Amy Catanzano (one version of many possible)"),
             html.Br(),                  
             html.Blockquote([
             html.Label("When we think as far as our world lines, our thoughts become movements"),
@@ -976,7 +978,7 @@ app.layout = html.Div(children=[
             html.Br(),                
             html.Label(["An algorithm and quantum script has been written in the Python computer programming language to compute all possible versions of ", html.Em(html.Strong("World Lines")),". The first step of the algorithm parses each line of the text and identifies branch points, words that occur on another line, and stores their location indices. In the second step, these indices are used to compute the directed acylic graph (DAG) through the text, associated with each unique branch point. The set of DAGs forms a topological map that forms the basis for the quantum script in step three of the algorithm. The quantum nature of this step is implicit in the entanglement of all variants of the text in the topological map. Step three of the algorithm proceeds by disentanglement of unique variants of the text. This is achieved by extracting anyons, reconstructed lines of the text formed from prior and posterior segments of a path through a DAG passing through a branchpoint."]),
             html.Br(),            
-            html.Label(["So for example, the word 'continuous' in line 4 of ", html.Em(html.Strong("World Lines")), " is a branchpoint as it occurs again on line 7. Two anyons associated with this connectivity in the DAG for 'continuous' then lead to a 'braiding' of lines 4 and 7 such that the prior segment of line 4 up to and including 'continuous' continues with the posterior segment of line 7 afer the recurrence of 'continuous'. Its entangled partner comprises the prior segment of line 7 up to and including 'continuous' and continues with the posterior segment of line 4 following 'continuous'. Each variant of the poem is extracted by retaining the original line order in prior segments and then braiding once per branchpoint. For the 8 lines of ", html.Em(html.Strong("World Lines")),", the qunatum script disentangles 94 variants from the poem's topological map."]),
+            html.Label(["So for example, the word 'continuous' in line 4 of ", html.Em(html.Strong("World Lines")), " is a branchpoint as it occurs again on line 7. Two anyons associated with this connectivity in the DAG for 'continuous' then lead to a 'braiding' of lines 4 and 7 such that the prior segment of line 4 up to and including 'continuous' continues with the posterior segment of line 7 afer the recurrence of 'continuous'. Its entangled partner comprises the prior segment of line 7 up to and including 'continuous' and continues with the posterior segment of line 4 following 'continuous'. Each variant of the poem is extracted by retaining the original line order in prior segments and then braiding once per branchpoint. For the 8 lines of ", html.Em(html.Strong("World Lines")),", the quantum script disentangles 94 variants from the poem's topological map."]),
             html.Br(),            
             html.Label(["This leads to four interesting potential applications. The first is the development of a linguistic processor trained to select variants that are semantically logical. As such, meaningful text is self-generated from a text allowing exploration of the nature of imagination itself. The second is the calculation of a statistical measure of the complexity of a text by joining its ends and using the branch point topology to cast it in the form of a G(n,p) Erdős–Rényi model. An optimisation algorithm has been written to deduce the value of the degree of randomness parameter, p for ", html.Em(html.Strong("World Lines")),". The third is the calculation of information entropy associated with each variant. Due to anyon braiding, each line of the text has a distinct and computable probability of ending on a different line. This enables the information entropy for each variant to be calculated. This may open a path for studying the relationship of imagined variations of a text and information theory. The fourth is as a quantum linguistic laboratory. Qubits are quantum bits formed from pairs of anyons. Start-of-line qubits are effectively entangled, in the quantum sense, with end-of-line qubits. The topological map encodes all text variants and therefore all entangled states in the one to many mapping of the original poem to its variants."]),
             html.Br(),            
