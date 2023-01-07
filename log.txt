@@ -15,4 +15,4 @@ N(lines)=8
 N(words)=98
 N(unique)=59
 N(branchpoints)=20
-N(variants)=94
+N(variants)=4
