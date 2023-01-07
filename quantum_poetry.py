@@ -3,10 +3,10 @@
 # -*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-# PROGRAM: worldlines.py
+# PROGRAM: quantum_poetry.py
 #------------------------------------------------------------------------------
-# Version 0.11
-# 9 July, 2020
+# Version 0.12
+# 1 August, 2020
 # Dr Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -17,20 +17,21 @@
 #------------------------------------------------------------------------------
 generate_anyons = True
 generate_variants = True
-generate_networkx_edges = True
+generate_networkx_edges = False
 generate_qubits = False
 generate_erdos_parameter = False
 generate_erdos_equivalence = False
 generate_adjacency = False
 qubit_logic = False
-plot_branchpoint_table = True
-plot_networkx_connections = True
-plot_networkx_non_circular = True
+plot_branchpoint_table = False
+plot_networkx_connections = False
+plot_networkx_non_circular = False
 plot_networkx_erdos_parameter = False
 plot_networkx_erdos_equivalence = False
-plot_networkx_connections_branchpoints = True
-plot_networkx_connections_dags = True
-plot_variants = True
+plot_networkx_connections_branchpoints = False
+plot_networkx_connections_dags = False
+plot_variants = False
+plot_topological_map = True
 machine_learning = False
 write_log = True
 #------------------------------------------------------------------------------
@@ -55,6 +56,7 @@ from networkx.algorithms import approximation as aprx
 # Plotting libraries:
 import matplotlib
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.cm as cm
 from matplotlib import colors as mcol
 from pandas.plotting import register_matplotlib_converters
@@ -726,6 +728,94 @@ if plot_variants == True:
     img.save(fp=fp_out, format='GIF', append_images=imgs,
          save_all=True, duration=1000, loop=0)
     
+if plot_topological_map == True:
+
+    print('plotting_topological_map ...')
+    
+    di = pd.DataFrame(allpoemsidx)
+    da = pd.DataFrame(allpoems)
+    dl = pd.DataFrame(allidx)
+
+    for i in range(nvariants):
+          
+        connectorstart = []
+        connectorend = []
+
+#        fig, ax = plt.subplots(figsize=(15,10))
+        for k in range(len(linelist)):  
+            
+            branchpoint = dl[(dl[0]==i)&(dl[1]==k)][3].values[0]                
+            linestart = dl[(dl[0]==i)&(dl[1]==k)][1].values[0]
+            lineend = dl[(dl[0]==i)&(dl[1]==k)][2].values[0]
+            if linestart < lineend:
+                x1 = np.arange(0, dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)
+                x2 = np.arange(dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1, dl[(dl[0]==i)&(dl[1]==k)][6].values[0]-dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)                               
+                y1 = np.ones(len(x1))*k
+                y2 = np.ones(len(x2))*k    
+#                plt.plot(x1,y1,'blue')
+#                plt.plot(x2,y2,'red')
+            else:
+                x3 = np.arange(dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1, dl[(dl[0]==i)&(dl[1]==k)][6].values[0]-dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)                               
+                x4 = np.arange(0, dl[(dl[0]==i)&(dl[1]==k)][5].values[0] - dl[(dl[0]==i)&(dl[1]==k)][4].values[0]+1)               
+                y3 = np.ones(len(x3))*k
+                y4 = np.ones(len(x4))*k
+#                plt.plot(x3,y3,'blue')
+#                plt.plot(x4,y4,'red')       
+
+    # prepare coordinates
+    nlines = 8
+    #nvariants = 94
+    nvariants = 4
+    nmaxwords = 14
+
+    x, y, z = np.indices((nlines, nmaxwords, nvariants)) 
+
+    # draw separate colour segment cuboids for each line
+
+    prior = np.zeros((nlines, nmaxwords, nvariants), dtype=bool)
+    posterior = np.zeros((nlines, nmaxwords, nvariants), dtype=bool)
+    empty = np.zeros((nlines, nmaxwords, nvariants), dtype=bool)
+
+    for variant in range(nvariants):
+        for line in range(nlines):
+        
+            # line cuboids
+            lineprior = (x==line) & (y<5) & (z==variant)
+            lineposterior = (x==line) & (y>=5) & (z==variant)  
+            lineempty = (x==line) & (y==13) & (z==variant)
+            
+            # boolean append
+            prior = prior | lineprior
+            posterior = posterior | lineposterior
+            empty = empty | lineempty
+
+    # combine the objects into a single boolean array
+    voxels = prior | posterior | empty 
+
+    # set facecolors of voxel objects
+    fcolors = np.empty(voxels.shape, dtype=object)
+    fcolors[prior] = '#ff619b' # pink
+    fcolors[posterior] = '#14d0f0' # cyan
+    fcolors[empty] = '#d2e6f2' # lightgrey
+    #fcolors[empty] = '#ffffff' # white
+
+    # set edgecolors of voxel objects
+    ecolors = np.empty(voxels.shape, dtype=object)
+    ecolors[prior] = '#d41243' # red
+    ecolors[posterior] = '#0099f7' # blue
+    ecolors[empty] = '#bddaf0' # grey
+    #ecolors[empty] = '#ffffff' # white
+
+    # render 3D plot
+    fontsize=20
+    fig = plt.figure(figsize=(15,10))
+    ax = fig.gca(projection='3d')
+    ax.voxels(voxels, facecolors=fcolors, edgecolors=ecolors, alpha=0.25)
+    ax.set_xlabel('line in text', fontsize=fontsize)
+    ax.set_ylabel('word in anyon', fontsize=fontsize)
+    ax.set_zlabel('variant in topological map', fontsize=fontsize)
+    plt.savefig('3d_voxels.png')
+
 if plot_networkx_connections_branchpoints == True:
     
     print('plotting_networkx_connections_branchpoints ...')
